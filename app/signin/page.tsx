@@ -1,5 +1,5 @@
 'use client'
-import React from "react";
+import React, { FormEvent } from "react";
 import signIn from "../../firebase/auth/signin";
 import { useRouter } from 'next/navigation'
 import {PageWrapper, Form, Input, SignUp, Redirect} from '../signup/page'
@@ -9,7 +9,7 @@ function Page() {
   const [password, setPassword] = React.useState('')
   const router = useRouter()
 
-  const handleForm = async (event) => {
+  const handleForm = async (event: FormEvent) => {
     event.preventDefault()
 
     const { result, error } = await signIn(email, password);
@@ -29,7 +29,7 @@ function Page() {
         <Input onChange={(e) => setPassword(e.target.value)} required type="password" name="password" id="password" placeholder="password" />
         <SignUp type="submit">Sign in</SignUp>
       </Form>
-      <Redirect onClick={() => router.push("/signup")}>👉 I don't have an account</Redirect>
+      <Redirect onClick={() => router.push("/signup")}>👉 I don&apos;t have an account</Redirect>
     </PageWrapper>
   );
 }

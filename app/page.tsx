@@ -1,7 +1,7 @@
 'use client'
 import styled from 'styled-components';
 import {useState, useEffect, useRef} from "react";
-import { useAuthContext } from "../context/AuthContext";
+import { useAuthContext } from "../context/authContext";
 import { useRouter } from "next/navigation";
 import addSpentData from "../firebase/firestore/addData";
 import {collection, getFirestore, onSnapshot} from "firebase/firestore";
@@ -185,6 +185,21 @@ const EmojiInputRow = styled(MessageAmtRow)`
   justify-content: space-between;
 `
 
+const TagWrapper = styled.div`
+  display: flex;
+`
+
+const AddTag = styled.button`
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  outline: none;
+  border: none;
+  margin-left: 20px;
+  background-color: #c0cbf0;
+  color: black;
+`
+
 const ChatApp = () => {
   const {user} =useAuthContext()
   const [messages, setMessages] = useState<Array<{[key: string]: string}>>([])
@@ -194,16 +209,15 @@ const ChatApp = () => {
   const [enteredDescription, setEnteredDescription] = useState('')
   const [addTag, setAddTag] = useState(true)
   const router = useRouter()
-  const lastMessageRef = useRef(null)
-
-
+  const lastMessageRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (user == null) router.push("/signin")
-  }, [user])
+  }, [user, router])
 
   useEffect(() => {
-    const spentCollectionRef = collection(db, 'users', user.uid, 'spent');
+    //@ts-ignore
+    const spentCollectionRef = collection(db, 'users', user?.uid, 'spent');
     const q = query(spentCollectionRef,  orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const spentData: Array<{[key: string]: string}> = [];
@@ -228,12 +242,12 @@ const ChatApp = () => {
     return null
   }
 
-  const handleEmojiClick = async (index) => {
+  const handleEmojiClick = async (index: number) => {
     if(parseInt(enteredAmount) === 0 ){
       return null
     }
 
-    let data = {
+    let data: {amount: number, tag: string, description?: string} = {
       amount: parseInt(String(enteredAmount)),
       tag: emojis[index]
     }
@@ -284,9 +298,12 @@ const ChatApp = () => {
         ))}
       </MessageWrapper>
       <InputWrapper>
-        <EmojiContainer>
-          {emojis.map((each, index) => <Emoji key={index} onClick={() => handleEmojiClick(index)}>{each}</Emoji>)}
-        </EmojiContainer>
+        <TagWrapper>
+          <EmojiContainer>
+            {emojis.map((each, index) => <Emoji key={index} onClick={() => handleEmojiClick(index)}>{each}</Emoji>)}
+          </EmojiContainer>
+          <AddTag>+</AddTag>
+        </TagWrapper>
         <InputContainer>
           <MoneySymbol>₹</MoneySymbol>
           <Input placeholder='Enter amount' type='number' value={enteredAmount} onChange={e => {
