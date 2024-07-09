@@ -1,7 +1,6 @@
-import firebase_app from "../config";
-import { getFirestore, getDocs, collection } from "firebase/firestore";
+import { getDocs, collection } from "firebase/firestore";
+import { db } from "../config";
 
-const db = getFirestore(firebase_app);
 export default async function getSpentData(id) {
   const resultArray = [];
   let error = null;
