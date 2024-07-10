@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import {useState, useEffect, useRef} from "react";
 import { useAuthContext } from "../context/authContext";
 import { useRouter } from "next/navigation";
-import addSpentData from "../firebase/firestore/addData";
+import addSpentData, { addTag } from "../firebase/firestore/addData";
 import {collection, getFirestore, onSnapshot} from "firebase/firestore";
 import {query, orderBy} from "@firebase/firestore";
 import {handleSignOut} from '../firebase/auth/signup'
@@ -14,7 +14,10 @@ const SignOut = styled(SignUp)`
   width: 40px;
   position: absolute;
   margin: 10px;
-  
+`
+
+const DetailsButton = styled(SignOut)`
+  right: 50px
 `
 
 export const PageWrapper = styled.div`
@@ -203,10 +206,14 @@ const ChatApp = () => {
   const {user} =useAuthContext()
   const [messages, setMessages] = useState<Array<{[key: string]: string}>>([])
   const [enteredAmount, setEnteredAmount] = useState('')
-  const emojis = [ '🚗','🥦','🍕','🚗','🥦']
+  // const emojis = [ '🚗','🥦','🍕','🚗','🥦']
+  const [tags, setTags] = useState([])
   const [descriptionOpen, setDescriptionOpen] = useState(false)
   const [enteredDescription, setEnteredDescription] = useState('')
-  const [addTag, setAddTag] = useState(true)
+  const [openAddTag, setOpenAddTag] = useState(false)
+  const [addTagSmiley, setAddTagSmiley] = useState('')
+  const [addTagDesc, setAddTagDesc] = useState('')
+  const [addTagBudget, setAddTagBudget] = useState('')
   const router = useRouter()
   const lastMessageRef = useRef<HTMLDivElement>(null)
 
@@ -216,20 +223,52 @@ const ChatApp = () => {
 
   useEffect(() => {
     if(user){
-      const spentCollectionRef = collection(db, 'users', user?.uid, 'spent');
-      const q = query(spentCollectionRef,  orderBy('createdAt', 'asc'));
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const spentData: Array<{[key: string]: string}> = [];
+      const tagCollectionRef = collection( db, 'users', user?.uid, 'tag')
+      const tagsArray: Array<{[key: string]: string}> = [];
+      const tagUnsubscribe = onSnapshot(tagCollectionRef, querySnapshot => {
         querySnapshot.forEach((doc) => {
-          spentData.push({ id: doc.id, ...doc.data() });
+          
+          tagsArray.push({ id: doc.id, ...doc.data() });
         });
-        setMessages(spentData)
-      });
+        console.log(tagsArray)
+        setTags(tagsArray)
+      })
+      
+
+      
   
-      return () => unsubscribe();
+      return () => {
+        tagUnsubscribe();
+      }
     }
   
   }, []);
+
+  useEffect(() => {
+    if(tags.length > 0){
+      const spentCollectionRef = collection(db, 'users', user?.uid, 'spent');
+
+      const q = query(spentCollectionRef,  orderBy('createdAt', 'asc'));
+
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const spentData: Array<{[key: string]: string}> = [];
+          querySnapshot.forEach((doc) => {
+            const d = doc.data()
+            const tagObj = tags.find(each => each.id === d.tag)
+            let tempMessage = { id: doc.id,tag: tagObj.tag, amount: d.amount }
+            if(d.description){
+              tempMessage = {...tempMessage, description: d.description}
+            }
+            spentData.push(tempMessage);
+          });
+          setMessages(spentData)
+        
+      });
+      return () => {
+        unsubscribe();
+      }
+    }
+  },[user, tags])
 
   useEffect(()=> {
     if(lastMessageRef.current){
@@ -243,14 +282,14 @@ const ChatApp = () => {
     return null
   }
 
-  const handleEmojiClick = async (index: number) => {
+  const handleEmojiClick = async (id: string) => {
     if(parseInt(enteredAmount) === 0 ){
       return null
     }
 
     let data: {amount: number, tag: string, description?: string} = {
       amount: parseInt(String(enteredAmount)),
-      tag: emojis[index]
+      tag: id
     }
     if(enteredDescription){
       data = {...data, description: enteredDescription}
@@ -264,6 +303,28 @@ const ChatApp = () => {
     setDescriptionOpen(false)
   }
 
+  const closeAddTag = () => {
+    setOpenAddTag(false)
+    setAddTagDesc('')
+    setAddTagBudget('')
+    setAddTagSmiley('')
+  }
+
+  const handleAddTag = async () => {
+    let data: {tag: string, description: string, budget?: number} = {
+      tag: addTagSmiley,
+      description:addTagDesc,
+    }
+    if(addTagBudget){
+      data = {...data, budget: parseInt(addTagBudget)}
+    }
+    const {error} = await addTag(user.uid, data)
+    if (error) {
+      console.log(error)
+    }
+    closeAddTag()
+  }
+
   const Modal = () => {
     return (
         <Dialog>
@@ -273,9 +334,14 @@ const ChatApp = () => {
               <h4>Ex: 🥦 = vegetables</h4>
               <br/>
               <EmojiInputRow>
-                <SmileyInput/> = <SmileyWordInput />
+                <SmileyInput value={addTagSmiley} onChange={(e) => setAddTagSmiley(e.target.value)}/> = <SmileyWordInput value={addTagDesc} onChange={(e) => setAddTagDesc(e.target.value)}/>
               </EmojiInputRow>
-              <button type="button" onClick={() => setAddTag(false)}>Close Modal</button>
+              <SmileyWordInput value={addTagBudget} placeholder="Budget ?" type="number" onChange={(e) => setAddTagBudget(e.target.value)}/>
+              <MessageAmtRow>
+                <SignUp type="button" onClick={handleAddTag}>Add</SignUp>
+                <span> &nbsp; &nbsp; &nbsp;</span>
+                <SignUp type="button" onClick={closeAddTag}>Close</SignUp>
+              </MessageAmtRow>
           </DialogContent>
         </Dialog>
     );
@@ -287,12 +353,15 @@ const ChatApp = () => {
         handleSignOut().then(() => router.push('/signin'))
 
       }}>👋</SignOut>
+      <DetailsButton onClick={() => {
+        router.push('/details')
+      }}>📈</DetailsButton>
       <MessageWrapper>
         {messages.map((each, index) => (
           <Message key={index} ref={index === messages.length - 1 ? lastMessageRef : null}>
             <MessageAmtRow>
               <Amount>{each.amount}</Amount>
-              <Tag>{each.tag}</Tag>
+              <Tag>{each?.tag}</Tag>
             </MessageAmtRow>
             {each.description && <DescriptionRow>{each.description}</DescriptionRow>}
           </Message>
@@ -301,9 +370,9 @@ const ChatApp = () => {
       <InputWrapper>
         <TagWrapper>
           <EmojiContainer>
-            {emojis.map((each, index) => <Emoji key={index} onClick={() => handleEmojiClick(index)}>{each}</Emoji>)}
+            {tags.map((each, index) => <Emoji key={index} onClick={() => handleEmojiClick(each.id)}>{each.tag}</Emoji>)}
           </EmojiContainer>
-          <AddTag>+</AddTag>
+          <AddTag onClick={() => setOpenAddTag(true)}>+</AddTag>
         </TagWrapper>
         <InputContainer>
           <MoneySymbol>₹</MoneySymbol>
@@ -316,7 +385,7 @@ const ChatApp = () => {
           setEnteredDescription(e.target.value)
         }}/>}
       </InputWrapper>
-      {/* <Modal/> */}
+      {openAddTag && <Modal/> }
     </PageWrapper>
   );
 };

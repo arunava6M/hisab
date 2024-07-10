@@ -7,7 +7,6 @@ export default async function addSpentData(id, data) {
   let error = null;
 
   try {
-    const spentCollectionRef = collection(db, "users", id, "spent");
     result = await addDoc(collection(db, "users", id, "spent"), {
       ...data,
       createdAt: serverTimestamp(),
@@ -18,3 +17,19 @@ export default async function addSpentData(id, data) {
 
   return { result, error };
 }
+
+export const addTag = async (id, data) => {
+  let result = null;
+  let error = null;
+
+  try {
+    result = await addDoc(collection(db, "users", id, "tag"), {
+      ...data,
+      createdAt: serverTimestamp(),
+    });
+  } catch (e) {
+    error = e;
+  }
+
+  return { result, error };
+};
