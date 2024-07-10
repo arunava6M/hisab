@@ -5,10 +5,10 @@ import { useAuthContext } from "../context/authContext";
 import { useRouter } from "next/navigation";
 import addSpentData from "../firebase/firestore/addData";
 import {collection, getFirestore, onSnapshot} from "firebase/firestore";
-import firebase_app from "../firebase/config";
 import {query, orderBy} from "@firebase/firestore";
 import {handleSignOut} from '../firebase/auth/signup'
 import {SignUp} from './signup/page'
+import { db } from '../firebase/config';
 
 const SignOut = styled(SignUp)`
   width: 40px;
@@ -16,7 +16,6 @@ const SignOut = styled(SignUp)`
   margin: 10px;
   
 `
-const db = getFirestore(firebase_app)
 
 export const PageWrapper = styled.div`
   display: flex;
@@ -216,18 +215,20 @@ const ChatApp = () => {
   }, [user, router])
 
   useEffect(() => {
-    //@ts-ignore
-    const spentCollectionRef = collection(db, 'users', user?.uid, 'spent');
-    const q = query(spentCollectionRef,  orderBy('createdAt', 'asc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const spentData: Array<{[key: string]: string}> = [];
-      querySnapshot.forEach((doc) => {
-        spentData.push({ id: doc.id, ...doc.data() });
+    if(user){
+      const spentCollectionRef = collection(db, 'users', user?.uid, 'spent');
+      const q = query(spentCollectionRef,  orderBy('createdAt', 'asc'));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const spentData: Array<{[key: string]: string}> = [];
+        querySnapshot.forEach((doc) => {
+          spentData.push({ id: doc.id, ...doc.data() });
+        });
+        setMessages(spentData)
       });
-      setMessages(spentData)
-    });
-
-    return () => unsubscribe();
+  
+      return () => unsubscribe();
+    }
+  
   }, []);
 
   useEffect(()=> {
