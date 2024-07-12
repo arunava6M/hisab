@@ -3,14 +3,14 @@ import styled from 'styled-components';
 import {useState, useEffect, useRef} from "react";
 import { useAuthContext } from "../context/authContext";
 import { useRouter } from "next/navigation";
-import addSpentData, { addTag } from "../firebase/firestore/addData";
+import addSpentData, { addTag, updateTagSpent } from "../firebase/firestore/addData";
 import {collection, getFirestore, onSnapshot} from "firebase/firestore";
 import {query, orderBy} from "@firebase/firestore";
 import {handleSignOut} from '../firebase/auth/signup'
 import {SignUp} from './signup/page'
 import { db } from '../firebase/config';
 
-const SignOut = styled(SignUp)`
+export const SignOut = styled(SignUp)`
   width: 40px;
   position: absolute;
   margin: 10px;
@@ -217,9 +217,9 @@ const ChatApp = () => {
   const router = useRouter()
   const lastMessageRef = useRef<HTMLDivElement>(null)
 
-  // useEffect(() => {
-  //   if (user == null) router.push("/signin")
-  // }, [user, router])
+  useEffect(() => {
+    if (user == null) router.push("/signin")
+  }, [user, router])
 
   useEffect(() => {
     if(user){
@@ -294,6 +294,11 @@ const ChatApp = () => {
     if (error) {
       console.log(error)
     }
+    const { result: updateTagResult, error: updateTagError } = await updateTagSpent(
+      user.uid,
+      id,
+      parseInt(String(enteredAmount))
+    )
     setEnteredAmount('')
     setEnteredDescription('')
     setDescriptionOpen(false)
@@ -307,9 +312,10 @@ const ChatApp = () => {
   }
 
   const handleAddTag = async () => {
-    let data: {tag: string, description: string, budget?: number} = {
+    let data: {tag: string, description: string, spent: number, budget?: number} = {
       tag: addTagSmiley,
       description:addTagDesc,
+      spent: 0
     }
     if(addTagBudget){
       data = {...data, budget: parseInt(addTagBudget)}

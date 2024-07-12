@@ -1,9 +1,14 @@
 
 'use client'
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ProgressBar from "./progressBar";
 import {PageWrapper} from '../page';
 import styled from "styled-components";
+import { db } from '../../firebase/config';
+import { useAuthContext } from "../../context/authContext";
+import {collection, onSnapshot} from "firebase/firestore";
+import {SignOut} from '../page'
+import { useRouter } from "next/navigation";
 
 const DetailsWrapper = styled.div`
   display: flex;
@@ -12,14 +17,39 @@ const DetailsWrapper = styled.div`
 `
 
 const DetailsContainer = styled.div`
-  margin: 20px;
+  margin: 100px 20px 20px 20px;
 `
 
 const Percentage = styled.div`
   margin-left: auto
 `
 
-function Page() {
+const Page = () => {
+  const {user} =useAuthContext()
+  const [tags, setTags] = useState([])
+  const router = useRouter()
+
+
+  useEffect(() => {
+    if(user){
+      const tagCollectionRef = collection( db, 'users', user?.uid, 'tag')
+      const tagsArray: Array<{[key: string]: string}> = [];
+      const tagUnsubscribe = onSnapshot(tagCollectionRef, querySnapshot => {
+        querySnapshot.forEach((doc) => {
+          
+          tagsArray.push({ id: doc.id, ...doc.data() });
+        });
+        console.log(tagsArray)
+        setTags(tagsArray)
+      })
+      return () => {
+        tagUnsubscribe();
+      }
+    }
+  
+  }, []);
+
+  console.log(tags)
 
   const assignColor = (value) => {
     let finalColor;
@@ -38,14 +68,14 @@ function Page() {
     return finalColor;
   }
 
-  const getIconForCategories = (category) => {
-    switch(true){
-      case "Vegetables":
-        return "";
-      case "Groceries":
-        return "";
-    }
-  }
+  // const getIconForCategories = (category) => {
+  //   switch(true){
+  //     case "Vegetables":
+  //       return "";
+  //     case "Groceries":
+  //       return "";
+  //   }
+  // }
 
   const detailsData = [
     {
@@ -64,14 +94,15 @@ function Page() {
   
   return (
     <PageWrapper>
+      <SignOut onClick={() => router.back() }>◀️</SignOut>
       <DetailsContainer>
-        {detailsData.map((e,index)=>{
-          const percentageSpend = e.spendTillNow/e.budgetAllocated*100;
+        {tags.map((e,index)=>{
+          const percentageSpend = e.spent/e.budget*100;
           const colorBar = assignColor(percentageSpend);
 
           return (
             <DetailsWrapper key={index}>
-              <span>{e.categoryIcon}</span>
+              <span>{e.tag}</span>
               <ProgressBar
                 key={index}
                 height={10}
