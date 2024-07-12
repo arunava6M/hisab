@@ -21,6 +21,9 @@ const nextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  images: {
+    unoptimized: true,
+  },
   // webpack: (config, { isServer }) => {
   //   if (!isServer) {
   //     config.plugins.push(

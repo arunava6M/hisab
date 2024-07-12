@@ -153,7 +153,7 @@ const DescriptionInput = styled.textarea`
   color: black;
 `
 
-const Dialog = styled.dialog`
+const Dialog = styled.div`
   position: fixed;
   left: 0;
   top: 0;
@@ -217,9 +217,9 @@ const ChatApp = () => {
   const router = useRouter()
   const lastMessageRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (user == null) router.push("/signin")
-  }, [user, router])
+  // useEffect(() => {
+  //   if (user == null) router.push("/signin")
+  // }, [user, router])
 
   useEffect(() => {
     if(user){
@@ -233,10 +233,6 @@ const ChatApp = () => {
         console.log(tagsArray)
         setTags(tagsArray)
       })
-      
-
-      
-  
       return () => {
         tagUnsubscribe();
       }
@@ -245,7 +241,7 @@ const ChatApp = () => {
   }, []);
 
   useEffect(() => {
-    if(tags.length > 0){
+    if(user && tags.length > 0){
       const spentCollectionRef = collection(db, 'users', user?.uid, 'spent');
 
       const q = query(spentCollectionRef,  orderBy('createdAt', 'asc'));
@@ -278,7 +274,7 @@ const ChatApp = () => {
   },[messages])
 
   if (user == null) {
-    router.push("/signin")
+    // router.push("/signin")
     return null
   }
 
@@ -325,33 +321,10 @@ const ChatApp = () => {
     closeAddTag()
   }
 
-  const Modal = () => {
-    return (
-        <Dialog>
-          <DialogContent>
-              <h3>#Add_a_Tag</h3>
-              <br/>
-              <h4>Ex: 🥦 = vegetables</h4>
-              <br/>
-              <EmojiInputRow>
-                <SmileyInput value={addTagSmiley} onChange={(e) => setAddTagSmiley(e.target.value)}/> = <SmileyWordInput value={addTagDesc} onChange={(e) => setAddTagDesc(e.target.value)}/>
-              </EmojiInputRow>
-              <SmileyWordInput value={addTagBudget} placeholder="Budget ?" type="number" onChange={(e) => setAddTagBudget(e.target.value)}/>
-              <MessageAmtRow>
-                <SignUp type="button" onClick={handleAddTag}>Add</SignUp>
-                <span> &nbsp; &nbsp; &nbsp;</span>
-                <SignUp type="button" onClick={closeAddTag}>Close</SignUp>
-              </MessageAmtRow>
-          </DialogContent>
-        </Dialog>
-    );
-  }
-
   return (
     <PageWrapper>
       <SignOut onClick={() => {
         handleSignOut().then(() => router.push('/signin'))
-
       }}>👋</SignOut>
       <DetailsButton onClick={() => {
         router.push('/details')
@@ -385,7 +358,30 @@ const ChatApp = () => {
           setEnteredDescription(e.target.value)
         }}/>}
       </InputWrapper>
-      {openAddTag && <Modal/> }
+      {openAddTag && (
+        <Dialog>
+        <DialogContent>
+            <h3>#Add_a_Tag</h3>
+            <br/>
+            <h4>Ex: 🥦 = vegetables</h4>
+            <br/>
+            <EmojiInputRow>
+              <SmileyInput value={addTagSmiley} onChange={(e) => setAddTagSmiley(e.target.value)}/> = <SmileyWordInput value={addTagDesc} onChange={(e) => setAddTagDesc(e.target.value)}/>
+            </EmojiInputRow>
+            <SmileyWordInput
+              value={addTagBudget}
+              placeholder="Budget ?"
+              type="number"
+              onChange={(e) => setAddTagBudget(e.target.value)}
+            />
+            <MessageAmtRow>
+              <SignUp type="button" onClick={handleAddTag}>Add</SignUp>
+              <span> &nbsp; &nbsp; &nbsp;</span>
+              <SignUp type="button" onClick={closeAddTag}>Close</SignUp>
+            </MessageAmtRow>
+        </DialogContent>
+      </Dialog>
+      ) }
     </PageWrapper>
   );
 };
