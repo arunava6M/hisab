@@ -82,9 +82,8 @@ const InputWrapper = styled.div`
 `;
 const EmojiContainer = styled.div`
   display: flex;
-  max-width: 100%;
-  height: 30px;
-  margin: 0 10px 10px 0;
+  max-width: 70%;
+  margin: 0 10px 0 0;
   border-radius: 10px;
   padding: 0 10px;
   font-size: 20px;
@@ -147,6 +146,8 @@ const Dialog = styled.dialog`
 
 const TagWrapper = styled.div`
   display: flex;
+  justify-content: center;
+  margin: 0 0 10px 0;
 `;
 
 const ChatApp = () => {
@@ -159,6 +160,8 @@ const ChatApp = () => {
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [enteredDescription, setEnteredDescription] = useState('');
   const [openAddTag, setOpenAddTag] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   const router = useRouter();
   const lastMessageRef = useRef<HTMLDivElement>(null);
 
