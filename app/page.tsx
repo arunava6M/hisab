@@ -12,6 +12,8 @@ import { db } from '../firebase/config';
 import { Input } from './component/atoms/Input';
 import { Button } from './component/atoms/Button';
 import { AddTag } from './component/molecules/AddTag/AddTag';
+import Image from 'next/image';
+import { Text } from './component/atoms/Text';
 
 export const SignOut = styled(SignUp)`
   width: 40px;
@@ -26,72 +28,76 @@ const DetailsButton = styled(SignOut)`
 export const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background-color: #f9f9fa;
 `;
 
 const MessageWrapper = styled.div`
   padding: 20px;
   overflow-y: auto;
   flex: 1;
+  width: 100%;
 `;
 
-const Message = styled.div`
+const Message = styled.div<{ borderColor: string }>`
   bottom: 0;
-  width: max-content;
   padding: 10px;
   margin: 10px 0 10px 0;
   display: flex;
   flex-direction: column;
   max-width: 100%;
+  background-color: #fff;
+  border-radius: 10px;
+  border: ${({ borderColor }) => `0.5px solid ${borderColor}`};
+  box-shadow: 0px 7px 24px -11px rgba(0, 0, 0, 0.15);
 `;
 
 const MessageAmtRow = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
 `;
 
 const DescriptionRow = styled.div`
-  background-color: #d0f0c0;
+  flex: 2;
+  display: flex;
+  flex-direction: column;
   border-radius: 5px;
-  padding: 5px;
-  font-size: 12px;
-  color: black;
+  padding: 5px 5px 5px 10px;
 `;
 
 const Amount = styled.div`
   bottom: 0;
   width: max-content;
   border-radius: 5px;
-  background-color: #d0f0c0;
   margin-right: 5px;
   padding: 5px 10px;
 `;
 
 const Tag = styled.div`
-  font-size: 28px;
+  font-size: 20px;
 `;
 const InputWrapper = styled.div`
   padding: 10px;
   border-top: 1px solid #ccc;
-  background-color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
 `;
 const EmojiContainer = styled.div`
+  position: relative;
+  align-items: center;
   display: flex;
   max-width: 70%;
   margin: 0 10px 0 0;
   border-radius: 10px;
   padding: 0 10px;
   font-size: 20px;
-  -webkit-box-shadow: inset -2px 24px 49px -55px rgba(0, 0, 0, 1);
-  -moz-box-shadow: inset -2px 24px 49px -55px rgba(0, 0, 0, 1);
-  box-shadow: inset -2px 24px 49px -55px rgba(0, 0, 0, 1);
   overflow-x: scroll;
   overflow-y: hidden;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 const Emoji = styled.div`
   margin: 5px;
@@ -101,11 +107,14 @@ const InputContainer = styled.div`
   width: 100%;
   border: 1px solid #ccc;
   border-radius: 10px;
-  //background: aquamarine;
+  background-color: #fff;
   display: flex;
   align-items: center;
   padding: 0 10px;
   color: black;
+  // box-shadow: 0px 7px 42px -15px rgba(0, 0, 0, 0.51);
+  box-shadow: 0px 0px 19px -3px rgba(0, 0, 0, 0.37);
+  // margin-bottom: 80px;
 `;
 
 const MoneySymbol = styled.div`
@@ -147,7 +156,19 @@ const Dialog = styled.dialog`
 const TagWrapper = styled.div`
   display: flex;
   justify-content: center;
-  margin: 0 0 10px 0;
+  margin: 0 0 20px 0;
+`;
+
+const DateLine = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const Line = styled.div`
+  border-top: 1px solid grey;
+  flex-grow: 1;
+  margin: 0 10px;
 `;
 
 const ChatApp = () => {
@@ -155,7 +176,7 @@ const ChatApp = () => {
   const [messages, setMessages] = useState<
     Array<{ [key: string]: string | number }>
   >([]);
-  const [enteredAmount, setEnteredAmount] = useState('');
+  const [enteredAmount, setEnteredAmount] = useState(0);
   const [tags, setTags] = useState<Array<{ [key: string]: string }>>([]);
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [enteredDescription, setEnteredDescription] = useState('');
@@ -195,8 +216,14 @@ const ChatApp = () => {
 
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const spentData: Array<{ [key: string]: string | number }> = [];
+        let tempDate = '';
         querySnapshot.forEach((doc) => {
           const d = doc.data();
+          const dateRaw = new Date(
+            d.createdAt.seconds * 1000 + d.createdAt.nanoseconds / 1000000
+          );
+          const date = dateRaw.toLocaleDateString();
+          const time = dateRaw.toLocaleTimeString();
           const tagObj = tags.find((each) => each.id === d.tag);
           if (tagObj) {
             let tempMessage: {
@@ -204,10 +231,25 @@ const ChatApp = () => {
               tag: string;
               amount: number;
               description?: string;
-            } = { id: doc.id, tag: tagObj.tag, amount: d.amount };
+              date?: string;
+              time: string;
+            } = {
+              id: doc.id,
+              tag: tagObj.tag,
+              amount: d.amount,
+              time,
+            };
             if (d.description) {
               tempMessage = { ...tempMessage, description: d.description };
             }
+            if (tempDate === '') {
+              tempMessage = { ...tempMessage, date };
+              tempDate = date;
+            } else if (date !== tempDate) {
+              tempMessage = { ...tempMessage, date };
+              tempDate = date;
+            }
+
             spentData.push(tempMessage);
           }
         });
@@ -227,17 +269,16 @@ const ChatApp = () => {
   }, [messages]);
 
   if (user == null) {
-    // router.push("/signin")
     return null;
   }
 
   const handleEmojiClick = async (id: string) => {
-    if (parseInt(enteredAmount) === 0) {
+    if (enteredAmount === 0) {
       return null;
     }
 
     let data: { amount: number; tag: string; description?: string } = {
-      amount: parseInt(String(enteredAmount)),
+      amount: enteredAmount,
       tag: id,
     };
     if (enteredDescription) {
@@ -248,15 +289,24 @@ const ChatApp = () => {
       console.log(error);
     }
     const { result: updateTagResult, error: updateTagError } =
-      await updateTagSpent(user.uid, id, parseInt(String(enteredAmount)));
-    setEnteredAmount('');
+      await updateTagSpent(user.uid, id, enteredAmount);
+    setEnteredAmount(0);
     setEnteredDescription('');
     setDescriptionOpen(false);
   };
 
+  const getRandomColor = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  };
+
   return (
     <PageWrapper>
-      <SignOut
+      {/* <SignOut
         onClick={() => {
           handleSignOut().then(() => router.push('/signin'));
         }}
@@ -269,21 +319,35 @@ const ChatApp = () => {
         }}
       >
         📈
-      </DetailsButton>
+      </DetailsButton> */}
       <MessageWrapper>
         {messages.map((each, index) => (
-          <Message
-            key={index}
-            ref={index === messages.length - 1 ? lastMessageRef : null}
-          >
-            <MessageAmtRow>
-              <Amount>{each.amount}</Amount>
-              <Tag>{each?.tag}</Tag>
-            </MessageAmtRow>
-            {each.description && (
-              <DescriptionRow>{each.description}</DescriptionRow>
+          <>
+            {each.date && (
+              <DateLine key={index}>
+                <Line />
+                <Text variant="light">{each.date}</Text>
+                <Line />
+              </DateLine>
             )}
-          </Message>
+
+            <Message
+              ref={index === messages.length - 1 ? lastMessageRef : null}
+              key={index}
+              borderColor={getRandomColor()}
+            >
+              <MessageAmtRow>
+                <Tag>{each?.tag}</Tag>
+                <DescriptionRow>
+                  <Text variant="small">{each?.description}</Text>
+                  <Text variant="light">{each.time}</Text>
+                </DescriptionRow>
+                <Amount>
+                  <Text variant="bold">{`₹ ${each.amount}`}</Text>
+                </Amount>
+              </MessageAmtRow>
+            </Message>
+          </>
         ))}
       </MessageWrapper>
       <InputWrapper>
@@ -295,36 +359,45 @@ const ChatApp = () => {
               </Emoji>
             ))}
           </EmojiContainer>
-          <Button
-            onClick={() => setOpenAddTag(true)}
-            name="+"
-            variant="circle"
-          />
+          <DescriptionButton onClick={() => setOpenAddTag(true)}>
+            <Image height={20} width={20} src="/icon/add.svg" alt="Add icon" />
+          </DescriptionButton>
         </TagWrapper>
         <InputContainer>
           <MoneySymbol>₹</MoneySymbol>
           <Input
             onChange={(e) => {
-              setEnteredAmount(e.target.value);
+              setEnteredAmount(parseInt(e.target.value));
             }}
             value={enteredAmount}
             margin="10px"
+            type="number"
           />
-          <DescriptionButton
-            onClick={() => setDescriptionOpen(!descriptionOpen)}
-          >
-            ✏️
-          </DescriptionButton>
-        </InputContainer>
-        {descriptionOpen && (
-          <DescriptionInput
-            placeholder={'Enter description ...'}
-            value={enteredDescription}
+          <Input
             onChange={(e) => {
               setEnteredDescription(e.target.value);
             }}
+            value={enteredDescription}
+            margin="10px"
+            type="text"
+            placeholder={'Enter description ...'}
+            width="800px"
           />
-        )}
+          {/* <DescriptionButton
+            onClick={() => setDescriptionOpen(!descriptionOpen)}
+          >
+            <Image width={20} height={20} src="/icon/edit.svg" alt="edit" />
+          </DescriptionButton> */}
+          {/* {descriptionOpen && (
+            <DescriptionInput
+              placeholder={'Enter description ...'}
+              value={enteredDescription}
+              onChange={(e) => {
+                setEnteredDescription(e.target.value);
+              }}
+            />
+          )} */}
+        </InputContainer>
       </InputWrapper>
       {openAddTag && (
         <Dialog>

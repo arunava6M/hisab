@@ -13,7 +13,7 @@ interface InputProps {
 }
 const StyledInput = styled.input<InputProps>`
   width: ${({ width }) => width || '100%'};
-  font-size: 18px;
+  font-size: 12px;
   height: ${({ height }) => height || '60px'};
   margin: ${({ margin }) => margin};
   padding: 10px;

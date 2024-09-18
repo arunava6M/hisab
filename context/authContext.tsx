@@ -6,6 +6,7 @@ import {
 } from 'firebase/auth';
 import firebaseApp from '../firebase/config';
 import Loading from '../app/loading';
+import { Preferences } from '@capacitor/preferences';
 
 const auth = getAuth(firebaseApp);
 
@@ -34,26 +35,24 @@ const AuthContextProvider = ({
 }): React.ReactNode => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  console.log('user from authContext: ', user);
+  console.log('auth currentUser: ', auth.currentUser);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (firebaseUser: FirebaseUser | null) => {
-        if (firebaseUser) {
-          const userInfo: User = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-          };
-          setUser(userInfo);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
+    onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        console.log('firebaseUser: ', firebaseUser);
+        const userInfo: User = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+        };
+        setUser(userInfo);
+      } else {
+        setUser(null);
       }
-    );
-
-    return () => unsubscribe();
+      setLoading(false);
+    });
   }, []);
 
   // Return loading state or children wrapped in AuthContext.Provider
