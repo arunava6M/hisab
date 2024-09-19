@@ -8,9 +8,12 @@ import { useAuthContext } from '../../context/authContext';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { SignOut } from '../page';
 import { useRouter } from 'next/navigation';
+import { Block, Flex } from '../component/atoms/Basic';
+import { Text } from '../component/atoms/Text';
+import Image from 'next/image';
 
 const DetailsContainer = styled.div`
-  margin: 100px 20px 20px 20px;
+  margin: 20px;
 `;
 
 const RowWrapper = styled.div`
@@ -18,12 +21,6 @@ const RowWrapper = styled.div`
   flex-direction: column;
   border-bottom: 0.5px solid #cccbc8;
   margin: 0 0 20px;
-`;
-
-const DetailsWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  margin: 10px 0;
 `;
 
 const Percentage = styled.div`
@@ -34,6 +31,7 @@ const Page = () => {
   const { user } = useAuthContext();
   const [tags, setTags] = useState<Array<{ [key: string]: string }>>([]);
   const router = useRouter();
+  console.log(user);
 
   useEffect(() => {
     if (user) {
@@ -63,10 +61,10 @@ const Page = () => {
     let finalColor;
     switch (true) {
       case value > 50 && value < 65:
-        finalColor = 'blue';
+        finalColor = '#e38424';
         break;
       case value > 65:
-        finalColor = 'red';
+        finalColor = '#e32444';
         break;
       default:
         finalColor = 'green';
@@ -74,33 +72,81 @@ const Page = () => {
     return finalColor;
   };
 
+  console.log(tags);
+
   return (
     <PageWrapper>
-      <SignOut onClick={() => router.back()}>◀️</SignOut>
+      {/* <SignOut onClick={() => router.back()}>◀️</SignOut> */}
       <DetailsContainer>
-        {tags.map(({ tag, percentageSpent, description }, index) => {
-          const floatPercentageSpent = parseFloat(percentageSpent);
-          const colorBar = assignColor(floatPercentageSpent);
+        {tags.map(
+          ({ tag, percentageSpent, description, spent, budget }, index) => {
+            const floatPercentageSpent = parseFloat(percentageSpent);
+            const colorBar = assignColor(floatPercentageSpent);
 
-          return (
-            <RowWrapper key={index}>
-              {description}
-              <DetailsWrapper>
-                <span>{tag}</span>
-                <ProgressBar
-                  key={index}
-                  height={10}
-                  progress={floatPercentageSpent}
-                  progressColor={colorBar}
-                />
-                <Percentage>
-                  {floatPercentageSpent || 0}
-                  <span>%</span>
-                </Percentage>
-              </DetailsWrapper>
-            </RowWrapper>
-          );
-        })}
+            return (
+              <Block key={index}>
+                <Flex j="flex-start" a="center">
+                  <Flex
+                    m="0 10px 0 0"
+                    w="auto"
+                    b="1px solid #c2c2c2"
+                    br="10px"
+                    p="5px"
+                  >
+                    {tag}
+                  </Flex>
+                  <Flex f="3">
+                    <Text variant="bold">{description}</Text>
+                  </Flex>
+                  <Percentage>
+                    <Text variant="bold">
+                      {floatPercentageSpent || 0}
+                      <span>%</span>
+                    </Text>
+                  </Percentage>
+                </Flex>
+                <Flex m="10px 0">
+                  <ProgressBar
+                    key={index}
+                    height={2}
+                    progress={floatPercentageSpent}
+                    progressColor={colorBar}
+                  />
+                </Flex>
+                <Flex j="space-between" a="center" w="100%">
+                  <Flex
+                    // bg="#f7e4c6"
+                    br="10px"
+                    p="3px 20px"
+                    a="center"
+                    j="space-between"
+
+                    // b={`1px solid ${getRandomColor()}`}
+                  >
+                    <Image
+                      height={25}
+                      width={25}
+                      src="/icon/money-bag.png"
+                      alt="Add icon"
+                    />
+                    <Flex m="10px">
+                      <Text
+                        color="green"
+                        variant="smallBold"
+                      >{`₹${Math.max(0, parseFloat(budget) - parseFloat(spent)) | 0}`}</Text>
+                    </Flex>
+                  </Flex>
+                  <Flex j="flex-end" m="0 10px">
+                    <Text
+                      variant="smallBold"
+                      color="red"
+                    >{`- ₹${parseFloat(spent) | 0}`}</Text>
+                  </Flex>
+                </Flex>
+              </Block>
+            );
+          }
+        )}
       </DetailsContainer>
     </PageWrapper>
   );

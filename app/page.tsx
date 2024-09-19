@@ -1,6 +1,6 @@
 'use client';
 import styled from 'styled-components';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { useAuthContext } from '../context/authContext';
 import { useRouter } from 'next/navigation';
 import addSpentData, { updateTagSpent } from '../firebase/firestore/addData';
@@ -14,6 +14,8 @@ import { Button } from './component/atoms/Button';
 import { AddTag } from './component/molecules/AddTag/AddTag';
 import Image from 'next/image';
 import { Text } from './component/atoms/Text';
+import { Block } from './component/atoms/Basic';
+import { getRandomColor } from './utils/helper';
 
 export const SignOut = styled(SignUp)`
   width: 40px;
@@ -35,19 +37,6 @@ const MessageWrapper = styled.div`
   overflow-y: auto;
   flex: 1;
   width: 100%;
-`;
-
-const Message = styled.div<{ borderColor: string }>`
-  bottom: 0;
-  padding: 10px;
-  margin: 10px 0 10px 0;
-  display: flex;
-  flex-direction: column;
-  max-width: 100%;
-  background-color: #fff;
-  border-radius: 10px;
-  border: ${({ borderColor }) => `0.5px solid ${borderColor}`};
-  box-shadow: 0px 7px 24px -11px rgba(0, 0, 0, 0.15);
 `;
 
 const MessageAmtRow = styled.div`
@@ -295,15 +284,6 @@ const ChatApp = () => {
     setDescriptionOpen(false);
   };
 
-  const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  };
-
   return (
     <PageWrapper>
       {/* <SignOut
@@ -322,18 +302,17 @@ const ChatApp = () => {
       </DetailsButton> */}
       <MessageWrapper>
         {messages.map((each, index) => (
-          <>
+          <Fragment key={index}>
             {each.date && (
-              <DateLine key={index}>
+              <DateLine>
                 <Line />
                 <Text variant="light">{each.date}</Text>
                 <Line />
               </DateLine>
             )}
 
-            <Message
+            <Block
               ref={index === messages.length - 1 ? lastMessageRef : null}
-              key={index}
               borderColor={getRandomColor()}
             >
               <MessageAmtRow>
@@ -346,8 +325,8 @@ const ChatApp = () => {
                   <Text variant="bold">{`₹ ${each.amount}`}</Text>
                 </Amount>
               </MessageAmtRow>
-            </Message>
-          </>
+            </Block>
+          </Fragment>
         ))}
       </MessageWrapper>
       <InputWrapper>

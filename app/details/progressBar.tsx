@@ -14,15 +14,15 @@ const ChildDiv = styled.div<{ progress: number; progressColor: string }>`
   width: ${({ progress }) => {
     if (!progress) return '0%';
     if (progress > 100) {
-      return '100%';
+      return 'auto';
     }
     return `${progress}%`;
   }};
   background-color: ${(props) =>
     props.progressColor ? props.progressColor : 'red'};
-  border-radius: 40px;
+  box-shadow: ${(props) => ` ${props.progressColor} 0 0 20px 1px`};
+  border-radius: 100px;
   text-align: right;
-  margin-left: 10px;
 `;
 
 const ProgressBar = ({
