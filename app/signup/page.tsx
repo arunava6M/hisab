@@ -67,7 +67,7 @@ function Page() {
 
     // else successful
     console.log(result);
-    return router.push('/');
+    return router.push('/signin');
   };
   return (
     <PageWrapper>

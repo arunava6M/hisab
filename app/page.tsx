@@ -24,6 +24,7 @@ import {
 } from './utils/commonTypes';
 import Cookies from 'js-cookie';
 import Loading from './loading';
+import { Text } from './component/atoms/Text';
 
 const DashboardPage: React.FC<{}> = () => {
   const { setUser } = useAuthContext();
@@ -136,7 +137,6 @@ const DashboardPage: React.FC<{}> = () => {
         📈
       </DetailsButton> */}
       <ExpenseWrapper>
-        <button onClick={loadMoreExpense}>Load more</button>
         {expenses
           .slice()
           .reverse()
@@ -156,7 +156,6 @@ const DashboardPage: React.FC<{}> = () => {
               }
             />
           ))}
-        <button onClick={loadMoreExpense}>Load more</button>
       </ExpenseWrapper>
       <InputWrapper>
         <Input
