@@ -8,11 +8,16 @@ import Picker from 'emoji-picker-react';
 import { addCategory } from '../../../../helper/api';
 
 interface AddCategoryProps {
+  authToken: string;
   handleClose: () => void;
   onSuccess: () => void;
 }
 
-export const AddCategory = ({ handleClose, onSuccess }: AddCategoryProps) => {
+export const AddCategory = ({
+  authToken,
+  handleClose,
+  onSuccess,
+}: AddCategoryProps) => {
   console.log('rendering add category');
   const { user } = useAuthContext();
   const [name, setName] = useState('');
@@ -54,7 +59,7 @@ export const AddCategory = ({ handleClose, onSuccess }: AddCategoryProps) => {
       budget: budget,
       name,
     };
-    const { error } = await addCategory(data);
+    const { error } = await addCategory(authToken, data);
     if (error) {
       console.log(error);
     } else {

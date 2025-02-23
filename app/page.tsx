@@ -65,6 +65,8 @@ const DashboardPage: React.FC<{}> = () => {
 
   if (loading) return <Loading />;
 
+  if (!authToken) return null;
+
   const genericCatch = (error: ErrorType | any) => {
     alert(error.response.data.error);
     toaster(error.response.data.error);
@@ -204,6 +206,7 @@ const DashboardPage: React.FC<{}> = () => {
       {openAddTag && (
         <Dialog>
           <AddCategory
+            authToken={authToken}
             handleClose={() => {
               setOpenAddTag(false);
             }}
