@@ -12,6 +12,7 @@ type FlexProps = {
   b?: string;
   br?: string;
   bg?: string;
+  minH?: string;
 };
 export const Flex = styled.div<FlexProps>`
   display: flex;
@@ -20,23 +21,27 @@ export const Flex = styled.div<FlexProps>`
   align-items: ${({ a }) => a};
   width: ${({ w }) => w || '100%'};
   height: ${({ h }) => h || '100%'};
+  min-height: ${({ minH }) => minH};
   flex: ${({ f }) => f};
   margin: ${({ m }) => m};
   padding: ${({ p }) => p};
   border: ${({ b }) => b};
   border-radius: ${({ br }) => br};
   background-color: ${({ bg }) => bg};
+  overflow: hidden;
 `;
 
-export const Block = styled.div<{ borderColor?: string }>`
+export const Block = styled.div<{ borderColor?: string; height?: string }>`
   bottom: 0;
   padding: 10px;
   margin: 10px 0 10px 0;
   display: flex;
   flex-direction: column;
   max-width: 100%;
+  height: ${({ height }) => height || 'auto'};
   background-color: #fff;
   border-radius: 10px;
   border: ${({ borderColor }) => borderColor && `0.5px solid ${borderColor}`};
   box-shadow: 0px 7px 24px -11px rgba(0, 0, 0, 0.15);
+  transition: height 0.2s ease;
 `;

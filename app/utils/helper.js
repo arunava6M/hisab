@@ -6,3 +6,6 @@ export const getRandomColor = () => {
   }
   return color;
 };
+
+export const getToken = () =>
+  typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;

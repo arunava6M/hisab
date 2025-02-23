@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
-const { GenerateSW } = require("workbox-webpack-plugin");
+const { GenerateSW } = require('workbox-webpack-plugin');
 
 const nextConfig = {
   reactStrictMode: true,
-  output: "export",
-  distDir: "out",
+  // output: "export",
+  distDir: 'out',
   // assetPrefix: isProd ? "/hisab-app/" : "",
   // swcMinify: true,
   compiler: {

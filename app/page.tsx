@@ -1,21 +1,222 @@
 'use client';
-import styled from 'styled-components';
-import { useState, useEffect, useRef, Fragment } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuthContext } from '../context/authContext';
-import { useRouter } from 'next/navigation';
-import addSpentData, { updateTagSpent } from '../firebase/firestore/addData';
-import { collection, getFirestore, onSnapshot } from 'firebase/firestore';
-import { query, orderBy } from '@firebase/firestore';
-import { handleSignOut } from '../firebase/auth/signup';
-import { SignUp } from './signup/page';
-import { db } from '../firebase/config';
+import { redirect, useRouter } from 'next/navigation';
+import {
+  addExpense,
+  getCategories,
+  getExpenses,
+  getUserDetails,
+} from '../helper/api';
+import styled from 'styled-components';
 import { Input } from './component/atoms/Input';
-import { Button } from './component/atoms/Button';
-import { AddTag } from './component/molecules/AddTag/AddTag';
+import { Expense } from './component/molecules/Expense';
+import SuccessAnimation from './component/atoms/SuccessAnimation/Success';
+import { toaster } from '../helper/helperFunc';
+import { AddCategory } from './component/molecules/AddCategory';
+import { SignUp } from './signup/page';
 import Image from 'next/image';
-import { Text } from './component/atoms/Text';
-import { Block } from './component/atoms/Basic';
-import { getRandomColor } from './utils/helper';
+import {
+  CategoryType,
+  ErrorType,
+  ExpenseType,
+  UserType,
+} from './utils/commonTypes';
+import Cookies from 'js-cookie';
+import Loading from './loading';
+
+const DashboardPage: React.FC<{}> = () => {
+  const { setUser } = useAuthContext();
+  const [authToken, setAuthToken] = useState<string>();
+  const [expenses, setExpenses] = useState<ExpenseType[]>([]);
+  const [categories, setCategories] = useState<CategoryType[]>([]);
+  const [userDetails, setUserDetails] = useState<UserType>();
+  const [enteredAmount, setEnteredAmount] = useState(0);
+  const [enteredDescription, setEnteredDescription] = useState('');
+  const [openAddTag, setOpenAddTag] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const router = useRouter();
+  const chatContainerRef = useRef(null);
+  const topMessageRef = useRef(null);
+
+  useEffect(() => {
+    const auth_token = Cookies.get('authToken');
+    if (!auth_token) {
+      redirect('/signin');
+    }
+    setAuthToken(auth_token);
+    Promise.all([
+      getUserDetails(auth_token),
+      getExpenses(auth_token),
+      getCategories(auth_token),
+    ]).then((resp) => {
+      const user = resp[0].data;
+      setUserDetails(user);
+      setUser(user);
+      const expense = resp[1].data;
+      setExpenses(expense);
+      const categories = resp[2].data;
+      setCategories(categories);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return <Loading />;
+
+  const genericCatch = (error: ErrorType | any) => {
+    alert(error.response.data.error);
+    toaster(error.response.data.error);
+    if (error.response.data.error === 'Token is invalid/expired') {
+      localStorage.removeItem('authToken');
+      router.push('/signin');
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const categories = await getCategories(authToken);
+      setCategories(categories.data);
+    } catch (error) {
+      genericCatch(error);
+    }
+  };
+
+  const handleEmojiClick = async (id: string) => {
+    if (enteredAmount === 0) {
+      return null;
+    }
+
+    let data: { amount: number; category: string; description?: string } = {
+      amount: enteredAmount,
+      category: id,
+    };
+    if (enteredDescription) {
+      data = { ...data, description: enteredDescription };
+    }
+    const result = await addExpense(authToken, data);
+    setShowAnimation(true);
+    const expenses = await getExpenses(authToken);
+    setExpenses(expenses.data);
+    setEnteredAmount(0);
+    setEnteredDescription('');
+  };
+
+  const showDateLine = (current: string, previous: string) => {
+    const currDate = new Date(current);
+    const prevDate = new Date(previous);
+    return currDate.toDateString() !== prevDate.toDateString();
+  };
+
+  const loadMoreExpense = async () => {
+    const result = await getExpenses(authToken);
+    setExpenses((prev) => [...prev, ...result.data]);
+  };
+
+  return (
+    <PageWrapper>
+      {showAnimation && (
+        <SuccessAnimation onComplete={() => setShowAnimation(false)} />
+      )}
+      {/* <SignOut
+        onClick={() => {
+          handleSignOut().then(() => router.push('/signin'));
+        }}
+      >
+        👋
+      </SignOut>
+      <DetailsButton
+        onClick={() => {
+          router.push('/details');
+        }}
+      >
+        📈
+      </DetailsButton> */}
+      <ExpenseWrapper>
+        <button onClick={loadMoreExpense}>Load more</button>
+        {expenses
+          .slice()
+          .reverse()
+          .map((each, index) => (
+            <Expense
+              lastRef={(() => {
+                // if (index === expenses.length - 1) return lastExpenseRef;
+                if (index === 0) return topMessageRef;
+                return null;
+              })()}
+              expense={each}
+              key={index}
+              showDateLine={
+                index > 0
+                  ? showDateLine(each.date, expenses[index - 1].date)
+                  : true
+              }
+            />
+          ))}
+        <button onClick={loadMoreExpense}>Load more</button>
+      </ExpenseWrapper>
+      <InputWrapper>
+        <Input
+          onChange={(e) => {
+            setEnteredDescription(e.target.value);
+          }}
+          value={enteredDescription}
+          margin="10px"
+          type="text"
+          placeholder={'Enter description ...'}
+        />
+
+        <InputContainer>
+          <MoneySymbol>₹</MoneySymbol>
+          <Input
+            onChange={(e) => {
+              setEnteredAmount(parseInt(e.target.value));
+            }}
+            value={enteredAmount <= 0 ? '' : enteredAmount}
+            margin="10px"
+            type="number"
+            size="30px"
+            color={enteredAmount <= 0 ? 'grey' : '#0f66a0'}
+            placeholder="0.00"
+            bg="none"
+            width="100px"
+          />
+          <TagWrapper>
+            <EmojiContainer>
+              {categories.map((each, index) => (
+                <Emoji key={index} onClick={() => handleEmojiClick(each._id)}>
+                  {each.icon}
+                </Emoji>
+              ))}
+            </EmojiContainer>
+            <AddCategoryButton onClick={() => setOpenAddTag(true)}>
+              <Image
+                height={20}
+                width={20}
+                src="/icon/add.svg"
+                alt="Add icon"
+              />
+            </AddCategoryButton>
+          </TagWrapper>
+        </InputContainer>
+      </InputWrapper>
+      {openAddTag && (
+        <Dialog>
+          <AddCategory
+            handleClose={() => {
+              setOpenAddTag(false);
+            }}
+            onSuccess={() => {
+              setShowAnimation(true);
+              fetchCategories();
+            }}
+          />
+        </Dialog>
+      )}
+    </PageWrapper>
+  );
+};
 
 export const SignOut = styled(SignUp)`
   width: 40px;
@@ -30,42 +231,22 @@ const DetailsButton = styled(SignOut)`
 export const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  height: 100vh;
 `;
 
-const MessageWrapper = styled.div`
+const ExpenseWrapper = styled.div`
   padding: 20px;
   overflow-y: auto;
   flex: 1;
   width: 100%;
+  height: 100vh;
+  margin-top: 80px;
+  overflow-anchor: none;
 `;
 
-const MessageAmtRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const DescriptionRow = styled.div`
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  border-radius: 5px;
-  padding: 5px 5px 5px 10px;
-`;
-
-const Amount = styled.div`
-  bottom: 0;
-  width: max-content;
-  border-radius: 5px;
-  margin-right: 5px;
-  padding: 5px 10px;
-`;
-
-const Tag = styled.div`
-  font-size: 20px;
-`;
 const InputWrapper = styled.div`
   padding: 10px;
+  margin-bottom: 80px;
   border-top: 1px solid #ccc;
   display: flex;
   flex-direction: column;
@@ -76,7 +257,8 @@ const EmojiContainer = styled.div`
   position: relative;
   align-items: center;
   display: flex;
-  max-width: 70%;
+  flex: 5;
+  // max-width: 70%;
   margin: 0 10px 0 0;
   border-radius: 10px;
   padding: 0 10px;
@@ -90,6 +272,7 @@ const EmojiContainer = styled.div`
 `;
 const Emoji = styled.div`
   margin: 5px;
+  font-size: 25px;
 `;
 
 const InputContainer = styled.div`
@@ -109,13 +292,17 @@ const InputContainer = styled.div`
 const MoneySymbol = styled.div`
   width: 20px;
   color: cadetblue;
-  font-size: 20px;
+  font-size: 30px;
+  margin-left: 10px;
 `;
 
-const DescriptionButton = styled.button`
+const AddCategoryButton = styled.button`
+  flex: 1;
   border: none;
   outline: none;
   background: none;
+  display: flex;
+  align-items: center;
 `;
 
 const DescriptionInput = styled.textarea`
@@ -144,247 +331,13 @@ const Dialog = styled.dialog`
 
 const TagWrapper = styled.div`
   display: flex;
-  justify-content: center;
-  margin: 0 0 20px 0;
+  justify-content: space-between;
+  background: #f0f0f0;
+  height: 50px;
+  border-radius: 8px;
+  padding: 5px 10px;
+  width: 100%;
+  overflow: hidden;
 `;
 
-const DateLine = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const Line = styled.div`
-  border-top: 1px solid grey;
-  flex-grow: 1;
-  margin: 0 10px;
-`;
-
-const ChatApp = () => {
-  const { user } = useAuthContext();
-  const [messages, setMessages] = useState<
-    Array<{ [key: string]: string | number }>
-  >([]);
-  const [enteredAmount, setEnteredAmount] = useState(0);
-  const [tags, setTags] = useState<Array<{ [key: string]: string }>>([]);
-  const [descriptionOpen, setDescriptionOpen] = useState(false);
-  const [enteredDescription, setEnteredDescription] = useState('');
-  const [openAddTag, setOpenAddTag] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  const router = useRouter();
-  const lastMessageRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (user == null) router.push('/signin');
-  }, [user, router]);
-
-  useEffect(() => {
-    if (user) {
-      const tagCollectionRef = collection(db, 'users', user?.uid, 'tag');
-
-      const tagUnsubscribe = onSnapshot(tagCollectionRef, (querySnapshot) => {
-        const tagsArray: Array<{ [key: string]: string }> = [];
-        querySnapshot.forEach((doc) => {
-          tagsArray.push({ id: doc.id, ...doc.data() });
-        });
-        console.log('tagsArray: ', tagsArray);
-        setTags(tagsArray);
-      });
-      return () => {
-        tagUnsubscribe();
-      };
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user && tags.length > 0) {
-      const spentCollectionRef = collection(db, 'users', user?.uid, 'spent');
-
-      const q = query(spentCollectionRef, orderBy('createdAt', 'asc'));
-
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const spentData: Array<{ [key: string]: string | number }> = [];
-        let tempDate = '';
-        querySnapshot.forEach((doc) => {
-          const d = doc.data();
-          const dateRaw = new Date(
-            d.createdAt.seconds * 1000 + d.createdAt.nanoseconds / 1000000
-          );
-          const date = dateRaw.toLocaleDateString();
-          const time = dateRaw.toLocaleTimeString();
-          const tagObj = tags.find((each) => each.id === d.tag);
-          if (tagObj) {
-            let tempMessage: {
-              id: string;
-              tag: string;
-              amount: number;
-              description?: string;
-              date?: string;
-              time: string;
-            } = {
-              id: doc.id,
-              tag: tagObj.tag,
-              amount: d.amount,
-              time,
-            };
-            if (d.description) {
-              tempMessage = { ...tempMessage, description: d.description };
-            }
-            if (tempDate === '') {
-              tempMessage = { ...tempMessage, date };
-              tempDate = date;
-            } else if (date !== tempDate) {
-              tempMessage = { ...tempMessage, date };
-              tempDate = date;
-            }
-
-            spentData.push(tempMessage);
-          }
-        });
-        setMessages(spentData);
-      });
-      return () => {
-        unsubscribe();
-      };
-    }
-  }, [user, tags]);
-
-  useEffect(() => {
-    if (lastMessageRef.current) {
-      console.log('into asdfas');
-      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  if (user == null) {
-    return null;
-  }
-
-  const handleEmojiClick = async (id: string) => {
-    if (enteredAmount === 0) {
-      return null;
-    }
-
-    let data: { amount: number; tag: string; description?: string } = {
-      amount: enteredAmount,
-      tag: id,
-    };
-    if (enteredDescription) {
-      data = { ...data, description: enteredDescription };
-    }
-    const { result, error } = await addSpentData(user.uid, data);
-    if (error) {
-      console.log(error);
-    }
-    const { result: updateTagResult, error: updateTagError } =
-      await updateTagSpent(user.uid, id, enteredAmount);
-    setEnteredAmount(0);
-    setEnteredDescription('');
-    setDescriptionOpen(false);
-  };
-
-  return (
-    <PageWrapper>
-      {/* <SignOut
-        onClick={() => {
-          handleSignOut().then(() => router.push('/signin'));
-        }}
-      >
-        👋
-      </SignOut>
-      <DetailsButton
-        onClick={() => {
-          router.push('/details');
-        }}
-      >
-        📈
-      </DetailsButton> */}
-      <MessageWrapper>
-        {messages.map((each, index) => (
-          <Fragment key={index}>
-            {each.date && (
-              <DateLine>
-                <Line />
-                <Text variant="light">{each.date}</Text>
-                <Line />
-              </DateLine>
-            )}
-
-            <Block
-              ref={index === messages.length - 1 ? lastMessageRef : null}
-              borderColor={getRandomColor()}
-            >
-              <MessageAmtRow>
-                <Tag>{each?.tag}</Tag>
-                <DescriptionRow>
-                  <Text variant="small">{each?.description}</Text>
-                  <Text variant="light">{each.time}</Text>
-                </DescriptionRow>
-                <Amount>
-                  <Text variant="bold">{`₹ ${each.amount}`}</Text>
-                </Amount>
-              </MessageAmtRow>
-            </Block>
-          </Fragment>
-        ))}
-      </MessageWrapper>
-      <InputWrapper>
-        <TagWrapper>
-          <EmojiContainer>
-            {tags.map((each, index) => (
-              <Emoji key={index} onClick={() => handleEmojiClick(each.id)}>
-                {each.tag}
-              </Emoji>
-            ))}
-          </EmojiContainer>
-          <DescriptionButton onClick={() => setOpenAddTag(true)}>
-            <Image height={20} width={20} src="/icon/add.svg" alt="Add icon" />
-          </DescriptionButton>
-        </TagWrapper>
-        <InputContainer>
-          <MoneySymbol>₹</MoneySymbol>
-          <Input
-            onChange={(e) => {
-              setEnteredAmount(parseInt(e.target.value));
-            }}
-            value={enteredAmount}
-            margin="10px"
-            type="number"
-          />
-          <Input
-            onChange={(e) => {
-              setEnteredDescription(e.target.value);
-            }}
-            value={enteredDescription}
-            margin="10px"
-            type="text"
-            placeholder={'Enter description ...'}
-            width="800px"
-          />
-          {/* <DescriptionButton
-            onClick={() => setDescriptionOpen(!descriptionOpen)}
-          >
-            <Image width={20} height={20} src="/icon/edit.svg" alt="edit" />
-          </DescriptionButton> */}
-          {/* {descriptionOpen && (
-            <DescriptionInput
-              placeholder={'Enter description ...'}
-              value={enteredDescription}
-              onChange={(e) => {
-                setEnteredDescription(e.target.value);
-              }}
-            />
-          )} */}
-        </InputContainer>
-      </InputWrapper>
-      {openAddTag && (
-        <Dialog>
-          <AddTag handleClose={setOpenAddTag} />
-        </Dialog>
-      )}
-    </PageWrapper>
-  );
-};
-
-export default ChatApp;
+export default DashboardPage;

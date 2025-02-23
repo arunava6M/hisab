@@ -1,61 +1,58 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import ProgressBar from './progressBar';
-import { PageWrapper } from '../page';
 import styled from 'styled-components';
 import { db } from '../../firebase/config';
 import { useAuthContext } from '../../context/authContext';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { SignOut } from '../page';
-import { useRouter } from 'next/navigation';
 import { Block, Flex } from '../component/atoms/Basic';
 import { Text } from '../component/atoms/Text';
 import Image from 'next/image';
-
-const DetailsContainer = styled.div`
-  margin: 20px;
-`;
-
-const RowWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  border-bottom: 0.5px solid #cccbc8;
-  margin: 0 0 20px;
-`;
-
-const Percentage = styled.div`
-  margin-left: 20px;
-`;
+import { editCategory, getAggregatedExpenses } from '../../helper/api';
+import { getRandomColor } from '../utils/helper';
+import { Input } from '../component/atoms/Input';
+import Cookies from 'js-cookie';
+import { redirect, useRouter } from 'next/navigation';
 
 const Page = () => {
-  const { user } = useAuthContext();
-  const [tags, setTags] = useState<Array<{ [key: string]: string }>>([]);
+  const [categories, setCategories] = useState<
+    Array<{ [key: string]: string }>
+  >([]);
+  const [expand, setExpand] = useState<number | null>(null);
   const router = useRouter();
-  console.log(user);
+  const [shareEmail, setShareEmail] = useState('');
+  const [authToken, setAuthToken] = useState<string>();
 
   useEffect(() => {
-    if (user) {
-      const tagCollectionRef = collection(db, 'users', user?.uid, 'tag');
-      const tagsArray: Array<{ [key: string]: string }> = [];
-      const tagUnsubscribe = onSnapshot(tagCollectionRef, (querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          const { spent, budget } = doc.data();
-          const percentage = ((Number(spent) / Number(budget)) * 100).toFixed(
-            2
-          );
-          tagsArray.push({
-            id: doc.id,
-            percentageSpent: percentage,
-            ...doc.data(),
-          });
-        });
-        setTags(tagsArray);
-      });
-      return () => {
-        tagUnsubscribe();
-      };
-    }
+    const fetchApis = async () => {
+      const auth_token = Cookies.get('authToken');
+      if (!auth_token) {
+        redirect('/signin');
+      }
+      setAuthToken(auth_token);
+      const response = await getAggregatedExpenses(auth_token);
+      setCategories(response.data);
+    };
+
+    fetchApis();
   }, []);
+
+  const editCategoryReq = async (id: string) => {
+    try {
+      const response = await editCategory(id, {
+        sharedWith: shareEmail,
+      });
+      console.log(response?.data);
+    } catch (error) {
+      // genericCatch(error);
+    }
+  };
+
+  const shareEmailHandler = (id: string) => {
+    if (shareEmail === '') return null;
+    editCategoryReq(id);
+  };
 
   const assignColor = (value: number) => {
     let finalColor;
@@ -72,20 +69,27 @@ const Page = () => {
     return finalColor;
   };
 
-  console.log(tags);
+  const expandBlock = (id: number) =>
+    typeof expand === 'number' ? setExpand(null) : setExpand(id);
 
   return (
     <PageWrapper>
       {/* <SignOut onClick={() => router.back()}>◀️</SignOut> */}
       <DetailsContainer>
-        {tags.map(
-          ({ tag, percentageSpent, description, spent, budget }, index) => {
-            const floatPercentageSpent = parseFloat(percentageSpent);
+        {categories.map(
+          ({ icon, description, total, budget, categoryId }, index) => {
+            const floatPercentageSpent = parseFloat(
+              ((Number(total) / Number(budget)) * 100).toFixed(2)
+            );
             const colorBar = assignColor(floatPercentageSpent);
 
             return (
-              <Block key={index}>
-                <Flex j="flex-start" a="center">
+              <Block
+                height={expand === index ? '210px' : '145px'}
+                key={index}
+                onClick={() => expandBlock(index)}
+              >
+                <Flex j="flex-start" a="center" minH="35px" h="35px">
                   <Flex
                     m="0 10px 0 0"
                     w="auto"
@@ -93,7 +97,7 @@ const Page = () => {
                     br="10px"
                     p="5px"
                   >
-                    {tag}
+                    {icon}
                   </Flex>
                   <Flex f="3">
                     <Text variant="bold">{description}</Text>
@@ -105,7 +109,7 @@ const Page = () => {
                     </Text>
                   </Percentage>
                 </Flex>
-                <Flex m="10px 0">
+                <Flex m="10px 0" minH="10px" h="10px">
                   <ProgressBar
                     key={index}
                     height={2}
@@ -113,36 +117,79 @@ const Page = () => {
                     progressColor={colorBar}
                   />
                 </Flex>
-                <Flex j="space-between" a="center" w="100%">
-                  <Flex
-                    // bg="#f7e4c6"
-                    br="10px"
-                    p="3px 20px"
-                    a="center"
-                    j="space-between"
-
-                    // b={`1px solid ${getRandomColor()}`}
-                  >
+                <Flex
+                  j="space-between"
+                  a="center"
+                  w="100%"
+                  minH="40px"
+                  h="40px"
+                >
+                  <Flex br="10px" p="3px 20px" a="center" j="space-between">
                     <Image
                       height={25}
                       width={25}
                       src="/icon/money-bag.png"
                       alt="Add icon"
                     />
-                    <Flex m="10px">
+                    <Flex m="10px" a="center">
                       <Text
                         color="green"
                         variant="smallBold"
-                      >{`₹${Math.max(0, parseFloat(budget) - parseFloat(spent)) | 0}`}</Text>
+                      >{`₹${Math.max(0, parseFloat(budget) - parseFloat(total)) | 0}`}</Text>
                     </Flex>
                   </Flex>
-                  <Flex j="flex-end" m="0 10px">
+                  <Flex j="flex-end" m="0 10px" a="center">
                     <Text
                       variant="smallBold"
                       color="red"
-                    >{`- ₹${parseFloat(spent) | 0}`}</Text>
+                    >{`- ₹${parseFloat(total) | 0}`}</Text>
                   </Flex>
                 </Flex>
+                <Rotate
+                  expanded={expand === index}
+                  m="10px"
+                  a="center"
+                  j="center"
+                  minH="10px"
+                  h="10px"
+                >
+                  <Image
+                    height={20}
+                    width={25}
+                    src="/icon/down.png"
+                    alt="Add icon"
+                  />
+                </Rotate>
+                {expand === index && (
+                  <Flex
+                    a="center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <Text color="green" variant="small">
+                      Share:
+                    </Text>
+                    <Input
+                      onChange={(e) => {
+                        e.preventDefault();
+                        setShareEmail(e.target.value);
+                      }}
+                      value={shareEmail}
+                      margin="10px"
+                      type="text"
+                      placeholder={'Email of the user'}
+                      height="auto"
+                    />
+                    <Image
+                      height={15}
+                      width={15}
+                      src="/icon/paper-plane.png"
+                      alt="Add icon"
+                      onClick={() => shareEmailHandler(categoryId)}
+                    />
+                  </Flex>
+                )}
               </Block>
             );
           }
@@ -151,5 +198,41 @@ const Page = () => {
     </PageWrapper>
   );
 };
+
+export const PageWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const DetailsContainer = styled.div`
+  margin: 80px 20px;
+`;
+
+const RowWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  border-bottom: 0.5px solid #cccbc8;
+  margin: 0 0 20px;
+`;
+
+const Percentage = styled.div`
+  margin-left: 20px;
+`;
+const Rotate = styled(Flex)<{ expanded: boolean }>`
+  transition: transform 0.2s ease;
+  transform: ${({ expanded }) => expanded && 'rotate(180deg)'};
+`;
+
+const ShareEmailInput = styled.div`
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: black;
+  box-shadow: 0px 0px 19px -3px rgba(0, 0, 0, 0.37);
+`;
 
 export default Page;

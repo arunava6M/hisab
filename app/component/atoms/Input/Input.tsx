@@ -10,18 +10,21 @@ interface InputProps {
   variant?: string;
   margin?: string;
   error?: boolean;
+  size?: string;
+  color?: string;
+  bg?: string;
 }
 const StyledInput = styled.input<InputProps>`
   width: ${({ width }) => width || '100%'};
-  font-size: 12px;
+  font-size: ${({ size }) => size || '12px'};
   height: ${({ height }) => height || '60px'};
   margin: ${({ margin }) => margin};
   padding: 10px;
   outline: none;
   border: ${({ error }) => (error ? '2px solid red' : 'none')};
   border-radius: ${({ variant }) => (variant === 'smiley' ? '50%' : '10px')};
-  background: #f0f0f0;
-  color: black;
+  background: ${({ bg }) => bg || '#f0f0f0'};
+  color: ${({ color }) => color || 'black'};
   &:focus {
     outline: none;
   }
@@ -37,6 +40,9 @@ export const Input = ({
   variant,
   margin,
   error,
+  size,
+  color,
+  bg,
 }: InputProps) => {
   return (
     <StyledInput
@@ -49,6 +55,9 @@ export const Input = ({
       value={value}
       onChange={onChange}
       error={error}
+      size={size}
+      color={color}
+      bg={bg}
     />
   );
 };

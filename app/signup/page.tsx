@@ -1,17 +1,18 @@
-'use client'
-import React, { FormEvent } from "react";
-import signUp from "../../firebase/auth/signup";
-import { useRouter } from 'next/navigation'
-import styled from "styled-components";
+'use client';
+import React, { FormEvent } from 'react';
+import signUp from '../../firebase/auth/signup';
+import { registerUser } from '../../helper/api';
+import { useRouter } from 'next/navigation';
+import styled from 'styled-components';
 
 export const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #F9F9FA;
+  background-color: #f9f9fa;
   justify-content: center;
   align-items: center;
-`
+`;
 
 export const Form = styled.form`
   position: relative;
@@ -19,20 +20,18 @@ export const Form = styled.form`
   flex-direction: column;
   align-items: center;
   width: max-content;
-;
-`
+`;
 
 export const Input = styled.input`
   width: 200px;
   height: 40px;
   border-radius: 5px;
   border: solid 1px black;
-  background-color:inherit;
+  background-color: inherit;
   margin-bottom: 10px;
   padding: 5px;
   color: black;
-;
-`
+`;
 
 export const SignUp = styled.button`
   right: 0;
@@ -41,41 +40,77 @@ export const SignUp = styled.button`
   border: none;
   outline: none;
   background-color: cadetblue;
-`
+`;
 
 export const Redirect = styled(SignUp)`
   position: absolute;
   bottom: 0;
   margin: 0 20px 20px 0;
-`
+`;
 function Page() {
-  const [email, setEmail] = React.useState('')
-  const [password, setPassword] = React.useState('')
-  const router = useRouter()
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [firstName, setFirstName] = React.useState('');
+  const [lastName, setLastName] = React.useState('');
+
+  const router = useRouter();
 
   const handleForm = async (event: FormEvent) => {
-    event.preventDefault()
+    event.preventDefault();
+    const body = { email, password, firstName, lastName };
 
-    const { result, error } = await signUp(email, password);
+    const { result, error } = await registerUser(body);
 
     if (error) {
-      return console.log(error)
+      return console.log(error);
     }
 
     // else successful
-    console.log(result)
-    return router.push("/")
-  }
+    console.log(result);
+    return router.push('/');
+  };
   return (
     <PageWrapper>
-        <Form onSubmit={handleForm} className="form">
-            <Input onChange={(e) => setEmail(e.target.value)} required type="email" name="email" id="email" placeholder="example@mail.com" />
-            <Input onChange={(e) => setPassword(e.target.value)} required type="password" name="password" id="password" placeholder="password" />
-          <SignUp type="submit">Sign up</SignUp>
-        </Form>
-      <Redirect onClick={() => router.push("/signin")}> 👉  I have an account</Redirect>
+      <Form onSubmit={handleForm} className="form">
+        <Input
+          onChange={(e) => setFirstName(e.target.value)}
+          required
+          type="text"
+          name="firstName"
+          id="firstName"
+          placeholder="First name"
+        />
+        <Input
+          onChange={(e) => setLastName(e.target.value)}
+          required
+          type="text"
+          name="lastName"
+          id="lastName"
+          placeholder="Last name"
+        />
+        <Input
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          type="email"
+          name="email"
+          id="email"
+          placeholder="example@mail.com"
+        />
+        <Input
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          type="password"
+          name="password"
+          id="password"
+          placeholder="password"
+        />
+        <SignUp type="submit">Sign up</SignUp>
+      </Form>
+      <Redirect onClick={() => router.push('/signin')}>
+        👉 I have an account
+      </Redirect>
     </PageWrapper>
-);
+  );
 }
 
 export default Page;
