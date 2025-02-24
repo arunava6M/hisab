@@ -1,5 +1,6 @@
 import axios from 'axios';
-const basePath = 'https://hisab-backend-k9rj.onrender.com';
+// const basePath = 'https://hisab-backend-k9rj.onrender.com';
+const basePath = 'http://localhost:3001';
 
 export const registerUser = (reqBody) =>
   axios.post(`${basePath}/auth/register`, { ...reqBody });

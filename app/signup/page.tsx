@@ -1,6 +1,5 @@
 'use client';
 import React, { FormEvent } from 'react';
-import signUp from '../../firebase/auth/signup';
 import { registerUser } from '../../helper/api';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';

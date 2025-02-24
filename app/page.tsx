@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthContext } from '../context/authContext';
 import { redirect, useRouter } from 'next/navigation';
 import {
@@ -11,7 +11,6 @@ import {
 import styled from 'styled-components';
 import { Input } from './component/atoms/Input';
 import { Expense } from './component/molecules/Expense';
-import SuccessAnimation from './component/atoms/SuccessAnimation/Success';
 import { toaster } from '../helper/helperFunc';
 import { AddCategory } from './component/molecules/AddCategory';
 import { SignUp } from './signup/page';
@@ -24,7 +23,12 @@ import {
 } from './utils/commonTypes';
 import Cookies from 'js-cookie';
 import Loading from './loading';
-import { Text } from './component/atoms/Text';
+import dynamic from 'next/dynamic';
+
+const SuccessAnimation = dynamic(
+  () => import('./component/atoms/SuccessAnimation/Success'),
+  { ssr: false }
+);
 
 const DashboardPage: React.FC<{}> = () => {
   const { setUser } = useAuthContext();
@@ -39,8 +43,6 @@ const DashboardPage: React.FC<{}> = () => {
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
-  const chatContainerRef = useRef(null);
-  const topMessageRef = useRef(null);
 
   useEffect(() => {
     const auth_token = Cookies.get('authToken');
@@ -62,6 +64,7 @@ const DashboardPage: React.FC<{}> = () => {
       setCategories(categories);
       setLoading(false);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) return <Loading />;
@@ -98,7 +101,7 @@ const DashboardPage: React.FC<{}> = () => {
     if (enteredDescription) {
       data = { ...data, description: enteredDescription };
     }
-    const result = await addExpense(authToken, data);
+    await addExpense(authToken, data);
     setShowAnimation(true);
     const expenses = await getExpenses(authToken);
     setExpenses(expenses.data);
@@ -144,7 +147,7 @@ const DashboardPage: React.FC<{}> = () => {
             <Expense
               lastRef={(() => {
                 // if (index === expenses.length - 1) return lastExpenseRef;
-                if (index === 0) return topMessageRef;
+                // if (index === 0) return topMessageRef;
                 return null;
               })()}
               expense={each}
@@ -226,10 +229,6 @@ export const SignOut = styled(SignUp)`
   margin: 10px;
 `;
 
-const DetailsButton = styled(SignOut)`
-  right: 50px;
-`;
-
 export const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -260,7 +259,6 @@ const EmojiContainer = styled.div`
   align-items: center;
   display: flex;
   flex: 5;
-  // max-width: 70%;
   margin: 0 10px 0 0;
   border-radius: 10px;
   padding: 0 10px;
@@ -286,9 +284,7 @@ const InputContainer = styled.div`
   align-items: center;
   padding: 0 10px;
   color: black;
-  // box-shadow: 0px 7px 42px -15px rgba(0, 0, 0, 0.51);
   box-shadow: 0px 0px 19px -3px rgba(0, 0, 0, 0.37);
-  // margin-bottom: 80px;
 `;
 
 const MoneySymbol = styled.div`
@@ -305,16 +301,6 @@ const AddCategoryButton = styled.button`
   background: none;
   display: flex;
   align-items: center;
-`;
-
-const DescriptionInput = styled.textarea`
-  height: max-content;
-  width: 100%;
-  margin-top: 10px;
-  background: inherit;
-  border-radius: 5px;
-  padding: 10px;
-  color: black;
 `;
 
 const Dialog = styled.dialog`
