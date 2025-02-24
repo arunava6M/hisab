@@ -24,6 +24,7 @@ import {
 import Cookies from 'js-cookie';
 import Loading from './loading';
 import dynamic from 'next/dynamic';
+import { Flex } from './component/atoms/Basic';
 
 const SuccessAnimation = dynamic(
   () => import('./component/atoms/SuccessAnimation/Success'),
@@ -189,9 +190,19 @@ const DashboardPage: React.FC<{}> = () => {
           <TagWrapper>
             <EmojiContainer>
               {categories.map((each, index) => (
-                <Emoji key={index} onClick={() => handleEmojiClick(each._id)}>
-                  {each.icon}
-                </Emoji>
+                <>
+                  {each.sharedWith.length > 0 && (
+                    <StarImage
+                      height={15}
+                      width={15}
+                      src="/icon/star.png"
+                      alt="Add icon"
+                    />
+                  )}
+                  <Emoji key={index} onClick={() => handleEmojiClick(each._id)}>
+                    {each.icon}
+                  </Emoji>
+                </>
               ))}
             </EmojiContainer>
             <AddCategoryButton onClick={() => setOpenAddTag(true)}>
@@ -222,6 +233,17 @@ const DashboardPage: React.FC<{}> = () => {
     </PageWrapper>
   );
 };
+
+const StarImage = styled(Image)`
+  margin: 0 -13px 0 0;
+  z-index: 1;
+  align-self: end;
+  width: 15px;
+  height: 15px;
+  padding: 3px;
+  background-color: black;
+  border-radius: 50%;
+`;
 
 export const SignOut = styled(SignUp)`
   width: 40px;
