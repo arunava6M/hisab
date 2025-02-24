@@ -2,7 +2,6 @@
 
 const nextConfig = {
   reactStrictMode: true,
-  distDir: 'out',
   compiler: {
     styledComponents: true,
   },
@@ -11,7 +10,7 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-  }
-}
-  
+  },
+};
+
 module.exports = nextConfig;
