@@ -21,8 +21,23 @@ interface CategoryType {
   sharedWith: Array<string>;
 }
 
-interface ErrorType {
-  response: { data: { error: string } };
+interface AggregatedCategory {
+  description: string;
+  total: string;
+  categoryId: string;
+  budget: string;
+  icon: string;
+  sharedWith: Array<{ name: string }>;
 }
 
-export type { ExpenseType, UserType, CategoryType, ErrorType };
+interface ErrorType {
+  response: { data: { error: string; details: string } };
+}
+
+export type {
+  ExpenseType,
+  UserType,
+  CategoryType,
+  ErrorType,
+  AggregatedCategory,
+};

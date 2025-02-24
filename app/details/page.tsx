@@ -2,23 +2,25 @@
 import React, { useEffect, useState } from 'react';
 import ProgressBar from './progressBar';
 import styled from 'styled-components';
-import { db } from '../../firebase/config';
-import { useAuthContext } from '../../context/authContext';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { SignOut } from '../page';
 import { Block, Flex } from '../component/atoms/Basic';
 import { Text } from '../component/atoms/Text';
 import Image from 'next/image';
-import { editCategory, getAggregatedExpenses } from '../../helper/api';
-import { getRandomColor } from '../utils/helper';
+import {
+  editCategory,
+  getAggregatedExpenses,
+  shareCategory,
+} from '../../helper/api';
 import { Input } from '../component/atoms/Input';
 import Cookies from 'js-cookie';
 import { redirect, useRouter } from 'next/navigation';
+import { AggregatedCategory, ErrorType } from '../utils/commonTypes';
+import { MemoizedUserList } from '../component/atoms/UserList';
+import { useAuthContext } from '../../context/authContext';
+import { getColorFromValue } from '../utils/helper';
 
 const Page = () => {
-  const [categories, setCategories] = useState<
-    Array<{ [key: string]: string }>
-  >([]);
+  const { user } = useAuthContext();
+  const [categories, setCategories] = useState<[AggregatedCategory]>();
   const [expand, setExpand] = useState<number | null>(null);
   const router = useRouter();
   const [shareEmail, setShareEmail] = useState('');
@@ -28,15 +30,23 @@ const Page = () => {
     const fetchApis = async () => {
       const auth_token = Cookies.get('authToken');
       if (!auth_token) {
-        redirect('/signin');
+        router.push('/signin');
       }
-      setAuthToken(auth_token);
-      const response = await getAggregatedExpenses(auth_token);
-      setCategories(response.data);
+      try {
+        const response = await getAggregatedExpenses(auth_token);
+        setCategories(response.data);
+        setAuthToken(auth_token);
+      } catch (error: any) {
+        if (error.response.data.details === 'jwt expired') {
+          router.push('/signin');
+        }
+      }
     };
 
     fetchApis();
   }, []);
+
+  if (!categories) return null;
 
   const editCategoryReq = async (id: string) => {
     try {
@@ -49,24 +59,12 @@ const Page = () => {
     }
   };
 
-  const shareEmailHandler = (id: string) => {
+  const shareEmailHandler = async (id: string) => {
     if (shareEmail === '') return null;
-    editCategoryReq(id);
-  };
-
-  const assignColor = (value: number) => {
-    let finalColor;
-    switch (true) {
-      case value > 50 && value < 65:
-        finalColor = '#e38424';
-        break;
-      case value > 65:
-        finalColor = '#e32444';
-        break;
-      default:
-        finalColor = 'green';
-    }
-    return finalColor;
+    await shareCategory(authToken, id, {
+      shareEmail,
+      action: 'add',
+    });
   };
 
   const expandBlock = (id: number) =>
@@ -77,11 +75,14 @@ const Page = () => {
       {/* <SignOut onClick={() => router.back()}>◀️</SignOut> */}
       <DetailsContainer>
         {categories.map(
-          ({ icon, description, total, budget, categoryId }, index) => {
+          (
+            { icon, description, total, budget, categoryId, sharedWith },
+            index
+          ) => {
             const floatPercentageSpent = parseFloat(
               ((Number(total) / Number(budget)) * 100).toFixed(2)
             );
-            const colorBar = assignColor(floatPercentageSpent);
+            const colorBar = getColorFromValue(floatPercentageSpent);
 
             return (
               <Block
@@ -99,6 +100,11 @@ const Page = () => {
                   >
                     {icon}
                   </Flex>
+                  {sharedWith.length > 0 && (
+                    <MemoizedUserList
+                      list={[{ name: user?.firstName }, ...sharedWith]}
+                    />
+                  )}
                   <Flex f="3">
                     <Text variant="bold">{description}</Text>
                   </Flex>
