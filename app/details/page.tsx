@@ -40,7 +40,7 @@ const Page = () => {
 
   const editCategoryReq = async (id: string) => {
     try {
-      const response = await editCategory(id, {
+      const response = await editCategory(authToken, id, {
         sharedWith: shareEmail,
       });
       console.log(response?.data);
