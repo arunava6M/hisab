@@ -1,6 +1,6 @@
 import axios from 'axios';
 const basePath = 'https://hisab-backend-k9rj.onrender.com';
-// const basePath = 'http://localhost:3001';
+// const basePath = 'http://localhost:3000';
 
 export const registerUser = (reqBody) =>
   axios.post(`${basePath}/auth/register`, { ...reqBody });
@@ -52,6 +52,13 @@ export const getAggregatedExpenses = (authToken) =>
 
 export const editCategory = (authToken, id, reqBody) =>
   axios.put(`${basePath}/category/${id}`, reqBody, {
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+    },
+  });
+
+export const shareCategory = (authToken, id, reqBody) =>
+  axios.put(`${basePath}/category/${id}/share`, reqBody, {
     headers: {
       Authorization: `Bearer ${authToken}`,
     },
