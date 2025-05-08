@@ -20,7 +20,7 @@ import { getColorFromValue } from '../utils/helper';
 
 const Page = () => {
   const { user } = useAuthContext();
-  const [categories, setCategories] = useState<[AggregatedCategory]>();
+  const [categories, setCategories] = useState<AggregatedCategory[]>();
   const [expand, setExpand] = useState<number | null>(null);
   const router = useRouter();
   const [shareEmail, setShareEmail] = useState('');
@@ -74,136 +74,148 @@ const Page = () => {
     <PageWrapper>
       {/* <SignOut onClick={() => router.back()}>◀️</SignOut> */}
       <DetailsContainer>
-        {categories.map(
-          (
-            { icon, description, total, budget, categoryId, sharedWith },
-            index
-          ) => {
-            const floatPercentageSpent = parseFloat(
-              ((Number(total) / Number(budget)) * 100).toFixed(2)
-            );
-            const colorBar = getColorFromValue(floatPercentageSpent);
+        {categories.length == 0 ? (
+          <EmptyContent>You have not done any Hisab yet !</EmptyContent>
+        ) : (
+          categories.map(
+            (
+              { icon, description, total, budget, categoryId, sharedWith },
+              index
+            ) => {
+              const floatPercentageSpent = parseFloat(
+                ((Number(total) / Number(budget)) * 100).toFixed(2)
+              );
+              const colorBar = getColorFromValue(floatPercentageSpent);
 
-            return (
-              <Block
-                height={expand === index ? '210px' : '145px'}
-                key={index}
-                onClick={() => expandBlock(index)}
-              >
-                <Flex j="flex-start" a="center" minH="35px" h="35px">
-                  <Flex
-                    m="0 10px 0 0"
-                    w="auto"
-                    b="1px solid #c2c2c2"
-                    br="10px"
-                    p="5px"
-                  >
-                    {icon}
-                  </Flex>
-                  {sharedWith.length > 0 && (
-                    <MemoizedUserList
-                      list={[{ name: user?.firstName }, ...sharedWith]}
-                    />
-                  )}
-                  <Flex f="3">
-                    <Text variant="bold">{description}</Text>
-                  </Flex>
-                  <Percentage>
-                    <Text variant="bold">
-                      {floatPercentageSpent || 0}
-                      <span>%</span>
-                    </Text>
-                  </Percentage>
-                </Flex>
-                <Flex m="10px 0" minH="10px" h="10px">
-                  <ProgressBar
-                    key={index}
-                    height={2}
-                    progress={floatPercentageSpent}
-                    progressColor={colorBar}
-                  />
-                </Flex>
-                <Flex
-                  j="space-between"
-                  a="center"
-                  w="100%"
-                  minH="40px"
-                  h="40px"
+              return (
+                <Block
+                  height={expand === index ? '210px' : '145px'}
+                  key={index}
+                  onClick={() => expandBlock(index)}
                 >
-                  <Flex br="10px" p="3px 20px" a="center" j="space-between">
-                    <Image
-                      height={25}
-                      width={25}
-                      src="/icon/money-bag.png"
-                      alt="Add icon"
+                  <Flex j="flex-start" a="center" minH="35px" h="35px">
+                    <Flex
+                      m="0 10px 0 0"
+                      w="auto"
+                      b="1px solid #c2c2c2"
+                      br="10px"
+                      p="5px"
+                    >
+                      {icon}
+                    </Flex>
+                    {sharedWith.length > 0 && (
+                      <MemoizedUserList
+                        list={[{ name: user?.firstName }, ...sharedWith]}
+                      />
+                    )}
+                    <Flex f="3">
+                      <Text variant="bold">{description}</Text>
+                    </Flex>
+                    <Percentage>
+                      <Text variant="bold">
+                        {floatPercentageSpent || 0}
+                        <span>%</span>
+                      </Text>
+                    </Percentage>
+                  </Flex>
+                  <Flex m="10px 0" minH="10px" h="10px">
+                    <ProgressBar
+                      key={index}
+                      height={2}
+                      progress={floatPercentageSpent}
+                      progressColor={colorBar}
                     />
-                    <Flex m="10px" a="center">
+                  </Flex>
+                  <Flex
+                    j="space-between"
+                    a="center"
+                    w="100%"
+                    minH="40px"
+                    h="40px"
+                  >
+                    <Flex br="10px" p="3px 20px" a="center" j="space-between">
+                      <Image
+                        height={25}
+                        width={25}
+                        src="/icon/money-bag.png"
+                        alt="Add icon"
+                      />
+                      <Flex m="10px" a="center">
+                        <Text
+                          color="green"
+                          variant="smallBold"
+                        >{`₹${Math.max(0, parseFloat(budget) - parseFloat(total)) | 0}`}</Text>
+                      </Flex>
+                    </Flex>
+                    <Flex j="flex-end" m="0 10px" a="center">
                       <Text
-                        color="green"
                         variant="smallBold"
-                      >{`₹${Math.max(0, parseFloat(budget) - parseFloat(total)) | 0}`}</Text>
+                        color="red"
+                      >{`- ₹${parseFloat(total) | 0}`}</Text>
                     </Flex>
                   </Flex>
-                  <Flex j="flex-end" m="0 10px" a="center">
-                    <Text
-                      variant="smallBold"
-                      color="red"
-                    >{`- ₹${parseFloat(total) | 0}`}</Text>
-                  </Flex>
-                </Flex>
-                <Rotate
-                  expanded={expand === index}
-                  m="10px"
-                  a="center"
-                  j="center"
-                  minH="10px"
-                  h="10px"
-                >
-                  <Image
-                    height={20}
-                    width={25}
-                    src="/icon/down.png"
-                    alt="Add icon"
-                  />
-                </Rotate>
-                {expand === index && (
-                  <Flex
+                  <Rotate
+                    expanded={expand === index}
+                    m="10px"
                     a="center"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
+                    j="center"
+                    minH="10px"
+                    h="10px"
                   >
-                    <Text color="green" variant="small">
-                      Share:
-                    </Text>
-                    <Input
-                      onChange={(e) => {
-                        e.preventDefault();
-                        setShareEmail(e.target.value);
-                      }}
-                      value={shareEmail}
-                      margin="10px"
-                      type="text"
-                      placeholder={'Email of the user'}
-                      height="auto"
-                    />
                     <Image
-                      height={15}
-                      width={15}
-                      src="/icon/paper-plane.png"
+                      height={20}
+                      width={25}
+                      src="/icon/down.png"
                       alt="Add icon"
-                      onClick={() => shareEmailHandler(categoryId)}
                     />
-                  </Flex>
-                )}
-              </Block>
-            );
-          }
+                  </Rotate>
+                  {expand === index && (
+                    <Flex
+                      a="center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      <Text color="green" variant="small">
+                        Share:
+                      </Text>
+                      <Input
+                        onChange={(e) => {
+                          e.preventDefault();
+                          setShareEmail(e.target.value);
+                        }}
+                        value={shareEmail}
+                        margin="10px"
+                        type="text"
+                        placeholder={'Email of the user'}
+                        height="auto"
+                      />
+                      <Image
+                        height={15}
+                        width={15}
+                        src="/icon/paper-plane.png"
+                        alt="Add icon"
+                        onClick={() => shareEmailHandler(categoryId)}
+                      />
+                    </Flex>
+                  )}
+                </Block>
+              );
+            }
+          )
         )}
       </DetailsContainer>
     </PageWrapper>
   );
 };
+
+const EmptyContent = styled.div`
+  height: 300px;
+  width: 300px;
+  border-radius: 8px;
+  margin: 30px;
+  text-align: center;
+`;
 
 export const PageWrapper = styled.div`
   display: flex;

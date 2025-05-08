@@ -70,7 +70,7 @@ export const AddCategory = ({
 
   return (
     <DialogContent>
-      <h3>#Add_a_Category</h3>
+      <h3>Add a category</h3>
       <br />
       <h4>Ex: 🥦 = vegetables</h4>
       <br />

@@ -7,6 +7,7 @@ const Div = styled.div`
   position: absolute;
   top: 50%;
   left: 31%;
+  z-index: 100;
 `;
 
 const SuccessAnimation = ({ onComplete }) => {
