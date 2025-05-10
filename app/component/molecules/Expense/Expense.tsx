@@ -45,7 +45,6 @@ const Line = styled.div`
 const ExpenseComp = ({ lastRef, expense, key, showDateLine }) => {
   const { amount, date: isoString, category } = expense;
   const readableDate = new Date(isoString);
-  console.log('rendering for: ', expense.amount);
 
   // useEffect(() => {
   //   if (lastRef?.current) {

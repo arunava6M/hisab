@@ -170,7 +170,7 @@ const DashboardPage: React.FC<{}> = () => {
               }
             />
           ))}
-          <div ref={lastMessageRef}> lastMessageRef </div>
+          <div ref={lastMessageRef} />
         </ExpenseWrapper>
       </ExpenseMain>
       <InputWrapper>
