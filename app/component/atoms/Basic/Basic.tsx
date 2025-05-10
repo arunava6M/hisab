@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 type FlexProps = {
   d?: string;
@@ -31,6 +31,11 @@ export const Flex = styled.div<FlexProps>`
   overflow: hidden;
 `;
 
+const OpactiyAnimation = keyframes`
+  0% { opacity: 0}
+  100% {opactiy: 100}
+`;
+
 export const Block = styled.div<{ borderColor?: string; height?: string }>`
   bottom: 0;
   padding: 10px;
@@ -43,5 +48,9 @@ export const Block = styled.div<{ borderColor?: string; height?: string }>`
   border-radius: 10px;
   border: ${({ borderColor }) => borderColor && `0.5px solid ${borderColor}`};
   box-shadow: 0px 7px 24px -11px rgba(0, 0, 0, 0.15);
-  transition: height 0.2s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+  animation-name: ${OpactiyAnimation};
+  animation-duration: 0.5s;
 `;

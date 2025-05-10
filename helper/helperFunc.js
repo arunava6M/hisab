@@ -1,4 +1,4 @@
-import { toast, Bounce } from "react-toastify";
+import { toast, Bounce } from 'react-toastify';
 export const toaster = (message) =>
   toast.error(message, {
     // position: "top-center",

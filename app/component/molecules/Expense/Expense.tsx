@@ -3,6 +3,7 @@ import { Block } from '../../atoms/Basic';
 import { Text } from '../../atoms/Text';
 import { getRandomColor } from '../../../utils/helper';
 import { Fragment, useEffect } from 'react';
+import React from 'react';
 
 const AmtRow = styled.div`
   display: flex;
@@ -41,9 +42,10 @@ const Line = styled.div`
   margin: 0 10px;
 `;
 
-export const Expense = ({ lastRef, expense, key, showDateLine }) => {
+const ExpenseComp = ({ lastRef, expense, key, showDateLine }) => {
   const { amount, date: isoString, category } = expense;
   const readableDate = new Date(isoString);
+  console.log('rendering for: ', expense.amount);
 
   // useEffect(() => {
   //   if (lastRef?.current) {
@@ -76,3 +78,5 @@ export const Expense = ({ lastRef, expense, key, showDateLine }) => {
     </Fragment>
   );
 };
+
+export const Expense = React.memo(ExpenseComp);

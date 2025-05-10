@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuthContext } from '../context/authContext';
 import { redirect, useRouter } from 'next/navigation';
 import {
@@ -24,7 +24,6 @@ import {
 import Cookies from 'js-cookie';
 import Loading from './loading';
 import dynamic from 'next/dynamic';
-import { Flex } from './component/atoms/Basic';
 
 const SuccessAnimation = dynamic(
   () => import('./component/atoms/SuccessAnimation/Success'),
@@ -43,7 +42,15 @@ const DashboardPage: React.FC<{}> = () => {
   const [showAnimation, setShowAnimation] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+
   const router = useRouter();
+
+  useEffect(() => {
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [expenses]);
 
   useEffect(() => {
     const auth_token = Cookies.get('authToken');
@@ -60,8 +67,11 @@ const DashboardPage: React.FC<{}> = () => {
       setUserDetails(user);
       setUser(user);
       const expense = resp[1].data;
-      setExpenses(expense);
+      setExpenses(expense.reverse());
       const categories = resp[2].data;
+      if (categories.length === 0) {
+        setOpenAddTag(true);
+      }
       setCategories(categories);
       setLoading(false);
     });
@@ -104,8 +114,10 @@ const DashboardPage: React.FC<{}> = () => {
     }
     await addExpense(authToken, data);
     setShowAnimation(true);
-    const expenses = await getExpenses(authToken);
-    setExpenses(expenses.data);
+    const expensesResponse = await getExpenses(authToken);
+    const newlyAddedExpense = expensesResponse.data[0];
+    setExpenses((prev) => [...prev, newlyAddedExpense]);
+    // setExpenses(expensesResponse.data);
     setEnteredAmount(0);
     setEnteredDescription('');
   };
@@ -140,11 +152,9 @@ const DashboardPage: React.FC<{}> = () => {
       >
         📈
       </DetailsButton> */}
-      <ExpenseWrapper>
-        {expenses
-          .slice()
-          .reverse()
-          .map((each, index) => (
+      <ExpenseMain>
+        <ExpenseWrapper>
+          {expenses.slice().map((each, index) => (
             <Expense
               lastRef={(() => {
                 // if (index === expenses.length - 1) return lastExpenseRef;
@@ -160,7 +170,9 @@ const DashboardPage: React.FC<{}> = () => {
               }
             />
           ))}
-      </ExpenseWrapper>
+          <div ref={lastMessageRef}> lastMessageRef </div>
+        </ExpenseWrapper>
+      </ExpenseMain>
       <InputWrapper>
         <Input
           onChange={(e) => {
@@ -256,19 +268,32 @@ export const PageWrapper = styled.div`
   flex-direction: column;
   height: 100vh;
 `;
+const ExpenseMain = styled.div`
+  overflow: scroll;
+  height: calc(100% - 320px);
+  margin-top: 60px;
+`;
 
 const ExpenseWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
   padding: 20px;
-  overflow-y: auto;
-  flex: 1;
+  // overflow: hidden;
+  flex: 3;
   width: 100%;
-  height: 100vh;
-  margin-top: 80px;
-  overflow-anchor: none;
+  // height: 100%;
+  // margin-top: 100px;
+  // overflow-anchor: none;
+  // background-color: red;
 `;
 
 const InputWrapper = styled.div`
-  padding: 10px;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  padding: 10px 10px 0 10px;
+  flex: 1;
   margin-bottom: 80px;
   border-top: 1px solid #ccc;
   display: flex;
