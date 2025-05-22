@@ -1,5 +1,8 @@
 interface ExpenseType {
-  category: string;
+  category: {
+    icon: string;
+    name: string;
+  };
   amount: number;
   description: string;
   owner: string;
@@ -34,10 +37,17 @@ interface ErrorType {
   response: { data: { error: string; details: string } };
 }
 
+interface ExpenseProps {
+  expense: ExpenseType;
+  uniqueKey: number;
+  showDateLine: boolean;
+}
+
 export type {
   ExpenseType,
   UserType,
   CategoryType,
   ErrorType,
   AggregatedCategory,
+  ExpenseProps,
 };

@@ -36,7 +36,7 @@ const OpactiyAnimation = keyframes`
   100% {opactiy: 100}
 `;
 
-export const Block = styled.div<{ borderColor?: string; height?: string }>`
+export const Block = styled.div<{ bordercolor?: string; height?: string }>`
   bottom: 0;
   padding: 10px;
   margin: 10px 0 10px 0;
@@ -46,7 +46,7 @@ export const Block = styled.div<{ borderColor?: string; height?: string }>`
   height: ${({ height }) => height || 'auto'};
   background-color: #fff;
   border-radius: 10px;
-  border: ${({ borderColor }) => borderColor && `0.5px solid ${borderColor}`};
+  border: ${({ bordercolor }) => bordercolor && `0.5px solid ${bordercolor}`};
   box-shadow: 0px 7px 24px -11px rgba(0, 0, 0, 0.15);
   transition:
     transform 0.3s ease,

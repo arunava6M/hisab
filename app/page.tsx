@@ -1,5 +1,12 @@
 'use client';
-import React, { useEffect, useState, useRef } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  Fragment,
+  useLayoutEffect,
+  useCallback,
+} from 'react';
 import { useAuthContext } from '../context/authContext';
 import { redirect, useRouter } from 'next/navigation';
 import {
@@ -41,19 +48,49 @@ const DashboardPage: React.FC<{}> = () => {
   const [openAddTag, setOpenAddTag] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [scrollToLast, setScrollToLast] = useState(true);
+  const [page, setPage] = useState<number>(1);
+  const [isVisible, setsVisible] = useState(false);
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const expenseWrapperRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setsVisible(entries[0].isIntersecting);
+        // if (entries[0].isIntersecting) {
+        //   loadMoreExpense();
+        // }
+      },
+      {
+        root: null,
+        rootMargin: '0px',
+        threshold: 1.0,
+      }
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, []);
+
+  const auth_token = Cookies.get('authToken');
 
   const router = useRouter();
 
   useEffect(() => {
-    if (lastMessageRef.current) {
+    if (scrollToLast && lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      const scrollTop = window.pageYOffset;
+      const scrollLeft = window.pageXOffset;
+      window.scrollTo(scrollLeft, scrollTop);
     }
-  }, [expenses]);
+  }, [expenses, scrollToLast]);
 
   useEffect(() => {
-    const auth_token = Cookies.get('authToken');
     if (!auth_token) {
       redirect('/signin');
     }
@@ -76,7 +113,11 @@ const DashboardPage: React.FC<{}> = () => {
       setLoading(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [auth_token]);
+
+  useEffect(() => {
+    if (isVisible) loadMoreExpense();
+  }, [isVisible]);
 
   if (loading) return <Loading />;
 
@@ -116,6 +157,7 @@ const DashboardPage: React.FC<{}> = () => {
     setShowAnimation(true);
     const expensesResponse = await getExpenses(authToken);
     const newlyAddedExpense = expensesResponse.data[0];
+    setScrollToLast(true);
     setExpenses((prev) => [...prev, newlyAddedExpense]);
     // setExpenses(expensesResponse.data);
     setEnteredAmount(0);
@@ -129,8 +171,20 @@ const DashboardPage: React.FC<{}> = () => {
   };
 
   const loadMoreExpense = async () => {
-    const result = await getExpenses(authToken);
-    setExpenses((prev) => [...prev, ...result.data]);
+    const container = expenseWrapperRef.current;
+    const prevHeight = container?.scrollHeight;
+    const nextPage = page + 1;
+    const { data } = await getExpenses(authToken, nextPage);
+    const expenseData = data.reverse();
+    setPage(nextPage);
+    setScrollToLast(false);
+    setExpenses((prev) => [...expenseData, ...prev]);
+
+    requestAnimationFrame(() => {
+      const newScrollHeight = container?.scrollHeight;
+      const scrollDiff = newScrollHeight - prevHeight;
+      container.scrollTop += scrollDiff;
+    });
   };
 
   return (
@@ -138,31 +192,16 @@ const DashboardPage: React.FC<{}> = () => {
       {showAnimation && (
         <SuccessAnimation onComplete={() => setShowAnimation(false)} />
       )}
-      {/* <SignOut
-        onClick={() => {
-          handleSignOut().then(() => router.push('/signin'));
-        }}
-      >
-        👋
-      </SignOut>
-      <DetailsButton
-        onClick={() => {
-          router.push('/details');
-        }}
-      >
-        📈
-      </DetailsButton> */}
-      <ExpenseMain>
+      <ExpenseMain ref={expenseWrapperRef}>
         <ExpenseWrapper>
+          <div onClick={loadMoreExpense} ref={loadMoreRef}>
+            more
+          </div>
           {expenses.slice().map((each, index) => (
+            // eslint-disable-next-line react/jsx-key
             <Expense
-              lastRef={(() => {
-                // if (index === expenses.length - 1) return lastExpenseRef;
-                // if (index === 0) return topMessageRef;
-                return null;
-              })()}
               expense={each}
-              key={index}
+              uniqueKey={index}
               showDateLine={
                 index > 0
                   ? showDateLine(each.date, expenses[index - 1].date)
@@ -173,6 +212,8 @@ const DashboardPage: React.FC<{}> = () => {
           <div ref={lastMessageRef} />
         </ExpenseWrapper>
       </ExpenseMain>
+
+      {/* <div>{isVisible ? 'View' : 'Not view'}</div> */}
       <InputWrapper>
         <Input
           onChange={(e) => {
@@ -202,7 +243,7 @@ const DashboardPage: React.FC<{}> = () => {
           <TagWrapper>
             <EmojiContainer>
               {categories.map((each, index) => (
-                <>
+                <Fragment key={index}>
                   {each.sharedWith.length > 0 && (
                     <StarImage
                       height={15}
@@ -214,7 +255,7 @@ const DashboardPage: React.FC<{}> = () => {
                   <Emoji key={index} onClick={() => handleEmojiClick(each._id)}>
                     {each.icon}
                   </Emoji>
-                </>
+                </Fragment>
               ))}
             </EmojiContainer>
             <AddCategoryButton onClick={() => setOpenAddTag(true)}>
@@ -271,7 +312,7 @@ export const PageWrapper = styled.div`
 const ExpenseMain = styled.div`
   overflow: scroll;
   height: calc(100% - 320px);
-  margin-top: 60px;
+  margin-top: 70px;
 `;
 
 const ExpenseWrapper = styled.div`
@@ -279,13 +320,8 @@ const ExpenseWrapper = styled.div`
   flex-direction: column;
   justify-content: end;
   padding: 20px;
-  // overflow: hidden;
   flex: 3;
   width: 100%;
-  // height: 100%;
-  // margin-top: 100px;
-  // overflow-anchor: none;
-  // background-color: red;
 `;
 
 const InputWrapper = styled.div`

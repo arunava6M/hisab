@@ -4,6 +4,7 @@ import { Text } from '../../atoms/Text';
 import { getRandomColor } from '../../../utils/helper';
 import { Fragment, useEffect } from 'react';
 import React from 'react';
+import { ExpenseProps } from '../../../utils/commonTypes';
 
 const AmtRow = styled.div`
   display: flex;
@@ -42,19 +43,15 @@ const Line = styled.div`
   margin: 0 10px;
 `;
 
-const ExpenseComp = ({ lastRef, expense, key, showDateLine }) => {
+const ExpenseComp: React.FC<ExpenseProps> = ({
+  expense,
+  uniqueKey,
+  showDateLine,
+}) => {
   const { amount, date: isoString, category } = expense;
   const readableDate = new Date(isoString);
-
-  // useEffect(() => {
-  //   if (lastRef?.current) {
-  //     console.log('inside last expense ref');
-  //     lastRef.current.scrollIntoView({ behavior: 'smooth' });
-  //   }
-  // }, []);
-
   return (
-    <Fragment key={key}>
+    <Fragment key={uniqueKey}>
       {showDateLine && readableDate && (
         <DateLine>
           <Line />
@@ -62,7 +59,7 @@ const ExpenseComp = ({ lastRef, expense, key, showDateLine }) => {
           <Line />
         </DateLine>
       )}
-      <Block ref={lastRef} borderColor={getRandomColor()}>
+      <Block bordercolor={getRandomColor()}>
         <AmtRow>
           <Tag>{category.icon}</Tag>
           <DescriptionRow>
