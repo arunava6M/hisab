@@ -1,12 +1,13 @@
 'use client';
 import AuthContextProvider, { useAuthContext } from '../context/authContext';
 import StyledComponentsRegistry from '../lib/registry';
-import { Suspense } from 'react';
+import { ReactNode, Suspense } from 'react';
 import Loading from './loading';
 import styled from 'styled-components';
 import { Outfit } from '@next/font/google';
 import { Header } from './component/molecules/Header';
 import { Footer } from './component/molecules/Footer';
+import { Bounce, ToastContainer } from 'react-toastify';
 
 // Load the font with specific options
 const outfit = Outfit({
@@ -20,7 +21,7 @@ const MainLayout = styled.div`
   margin-bottom: 80px;
 `;
 
-const ClientProvider = ({ children }) => (
+const ClientProvider: React.FC<{ children: ReactNode }> = ({ children }) => (
   <AuthContextProvider>
     <StyledComponentsRegistry>
       {/* <Suspense fallback={<Loading />}> */}

@@ -2,19 +2,17 @@
 import React, { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageWrapper, Form, Input, SignUp, Redirect } from '../signup/page';
-import { ToastContainer, Bounce } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Loading from '../loading';
-import { toaster } from '../../helper/helperFunc';
 import { login } from '../../helper/api';
 import Cookies from 'js-cookie';
+import { genericCatch } from '../utils/helper';
 
 function Page() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showLoader, setShowLoader] = useState(false);
   const router = useRouter();
-
   const handleForm = async (event: FormEvent) => {
     event.preventDefault();
     setShowLoader(true);
@@ -26,7 +24,7 @@ function Page() {
       Cookies.set('authToken', jwtToken, { expires: 1 });
       router.push('/');
     } catch (error) {
-      toaster(error.response.data.error);
+      genericCatch(error, router);
     }
 
     setShowLoader(false);
@@ -34,19 +32,6 @@ function Page() {
 
   return (
     <PageWrapper>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-        transition={Bounce}
-      />
       {showLoader && <Loading />}
       <Form onSubmit={handleForm} className="form">
         <Input

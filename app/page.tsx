@@ -4,11 +4,10 @@ import React, {
   useState,
   useRef,
   Fragment,
-  useLayoutEffect,
   useCallback,
 } from 'react';
 import { useAuthContext } from '../context/authContext';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   addExpense,
   getCategories,
@@ -18,19 +17,14 @@ import {
 import styled from 'styled-components';
 import { Input } from './component/atoms/Input';
 import { Expense } from './component/molecules/Expense';
-import { toaster } from '../helper/helperFunc';
 import { AddCategory } from './component/molecules/AddCategory';
 import { SignUp } from './signup/page';
 import Image from 'next/image';
-import {
-  CategoryType,
-  ErrorType,
-  ExpenseType,
-  UserType,
-} from './utils/commonTypes';
+import { CategoryType, ExpenseType, UserType } from './utils/commonTypes';
 import Cookies from 'js-cookie';
 import Loading from './loading';
 import dynamic from 'next/dynamic';
+import { genericCatch, showDateLine } from './utils/helper';
 
 const SuccessAnimation = dynamic(
   () => import('./component/atoms/SuccessAnimation/Success'),
@@ -39,7 +33,6 @@ const SuccessAnimation = dynamic(
 
 const DashboardPage: React.FC<{}> = () => {
   const { setUser } = useAuthContext();
-  const [authToken, setAuthToken] = useState<string>();
   const [expenses, setExpenses] = useState<ExpenseType[]>([]);
   const [categories, setCategories] = useState<CategoryType[]>([]);
   const [userDetails, setUserDetails] = useState<UserType>();
@@ -60,9 +53,6 @@ const DashboardPage: React.FC<{}> = () => {
     const observer = new IntersectionObserver(
       (entries) => {
         setsVisible(entries[0].isIntersecting);
-        // if (entries[0].isIntersecting) {
-        //   loadMoreExpense();
-        // }
       },
       {
         root: null,
@@ -75,9 +65,7 @@ const DashboardPage: React.FC<{}> = () => {
 
     return () => observer.disconnect();
   }, []);
-
-  const auth_token = Cookies.get('authToken');
-
+  const authToken = Cookies.get('authToken');
   const router = useRouter();
 
   useEffect(() => {
@@ -91,29 +79,27 @@ const DashboardPage: React.FC<{}> = () => {
   }, [expenses, scrollToLast]);
 
   useEffect(() => {
-    if (!auth_token) {
-      redirect('/signin');
-    }
-    setAuthToken(auth_token);
     Promise.all([
-      getUserDetails(auth_token),
-      getExpenses(auth_token),
-      getCategories(auth_token),
-    ]).then((resp) => {
-      const user = resp[0].data;
-      setUserDetails(user);
-      setUser(user);
-      const expense = resp[1].data;
-      setExpenses(expense.reverse());
-      const categories = resp[2].data;
-      if (categories.length === 0) {
-        setOpenAddTag(true);
-      }
-      setCategories(categories);
-      setLoading(false);
-    });
+      getUserDetails(authToken),
+      getExpenses(authToken),
+      getCategories(authToken),
+    ])
+      .then((resp) => {
+        const user = resp[0].data;
+        setUserDetails(user);
+        setUser(user);
+        const expense = resp[1].data;
+        setExpenses(expense.reverse());
+        const categories = resp[2].data;
+        if (categories.length === 0) {
+          setOpenAddTag(true);
+        }
+        setCategories(categories);
+        setLoading(false);
+      })
+      .catch((error) => genericCatch(error, router));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth_token]);
+  }, [authToken]);
 
   useEffect(() => {
     if (isVisible) loadMoreExpense();
@@ -123,21 +109,12 @@ const DashboardPage: React.FC<{}> = () => {
 
   if (!authToken) return null;
 
-  const genericCatch = (error: ErrorType | any) => {
-    alert(error.response.data.error);
-    toaster(error.response.data.error);
-    if (error.response.data.error === 'Token is invalid/expired') {
-      localStorage.removeItem('authToken');
-      router.push('/signin');
-    }
-  };
-
   const fetchCategories = async () => {
     try {
       const categories = await getCategories(authToken);
       setCategories(categories.data);
     } catch (error) {
-      genericCatch(error);
+      genericCatch(error, router);
     }
   };
 
@@ -159,15 +136,8 @@ const DashboardPage: React.FC<{}> = () => {
     const newlyAddedExpense = expensesResponse.data[0];
     setScrollToLast(true);
     setExpenses((prev) => [...prev, newlyAddedExpense]);
-    // setExpenses(expensesResponse.data);
     setEnteredAmount(0);
     setEnteredDescription('');
-  };
-
-  const showDateLine = (current: string, previous: string) => {
-    const currDate = new Date(current);
-    const prevDate = new Date(previous);
-    return currDate.toDateString() !== prevDate.toDateString();
   };
 
   const loadMoreExpense = async () => {
@@ -194,9 +164,7 @@ const DashboardPage: React.FC<{}> = () => {
       )}
       <ExpenseMain ref={expenseWrapperRef}>
         <ExpenseWrapper>
-          <div onClick={loadMoreExpense} ref={loadMoreRef}>
-            more
-          </div>
+          <div onClick={loadMoreExpense} ref={loadMoreRef} />
           {expenses.slice().map((each, index) => (
             // eslint-disable-next-line react/jsx-key
             <Expense
@@ -212,8 +180,6 @@ const DashboardPage: React.FC<{}> = () => {
           <div ref={lastMessageRef} />
         </ExpenseWrapper>
       </ExpenseMain>
-
-      {/* <div>{isVisible ? 'View' : 'Not view'}</div> */}
       <InputWrapper>
         <Input
           onChange={(e) => {
