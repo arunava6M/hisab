@@ -3,13 +3,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Text } from '../../atoms/Text';
 import { useAuthContext } from '../../../../context/authContext';
+import Cookies from 'js-cookie';
 
 const Wrapper = styled.footer`
   position: fixed;
   height: 60px;
   border-radius: 10px;
-  // border-top-left-radius: 20px;
-  // border-top-right-radius: 20px;
   bottom: 0;
   left: 0;
   right: 0;
@@ -18,7 +17,6 @@ const Wrapper = styled.footer`
   z-index: 1000;
   display: flex;
   justify-content: center;
-  // box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.15);
   box-shadow: 0px 7px 53px -11px rgba(0, 0, 0, 0.46);
 
   background-color: #f9f9fa;
@@ -54,7 +52,8 @@ export const Footer = () => {
     {
       icon: '/icon/logout.svg',
       title: 'Logout',
-      link: '/details',
+      link: '/signin',
+      onClick: () => Cookies.remove('authToken'),
     },
     {
       icon: '/icon/settings.svg',
@@ -67,7 +66,7 @@ export const Footer = () => {
       <Nav>
         {navigations.map((each, index) => (
           <EachNavWrapper key={index}>
-            <Link href={each.link}>
+            <Link href={each.link} onClick={each.onClick}>
               <Image src={each.icon} width={15} height={15} alt="nav icon" />
             </Link>
             <Text variant="light">{each.title}</Text>
