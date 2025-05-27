@@ -3,10 +3,10 @@ import React, { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageWrapper, Form, Input, SignUp, Redirect } from '../signup/page';
 import 'react-toastify/dist/ReactToastify.css';
-import Loading from '../loading';
-import { login } from '../../helper/api';
+import Loading from '@atoms/loading';
+import { login } from '@utils/api';
 import Cookies from 'js-cookie';
-import { genericCatch } from '../utils/helper';
+import { genericCatch } from '@utils/helper';
 
 function Page() {
   const [email, setEmail] = useState('');
@@ -22,7 +22,7 @@ function Page() {
       const { jwtToken } = response.data;
       localStorage.setItem('authToken', jwtToken);
       Cookies.set('authToken', jwtToken, { expires: 1 });
-      router.push('/');
+      router.push('/dashboard');
     } catch (error) {
       genericCatch(error, router);
     }

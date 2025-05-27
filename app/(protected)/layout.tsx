@@ -1,4 +1,5 @@
-import './globals.css';
+import ClientProvider from '@molecules/clientProvider';
+import { cookies } from 'next/headers';
 
 // export const metadata: Metadata = {
 //   title: 'Hisab - track & decide expense',
@@ -32,9 +33,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = cookies();
+  const authToken = cookieStore.get('authToken')?.value;
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ClientProvider authToken={authToken}>{children}</ClientProvider>
+      </body>
     </html>
   );
 }

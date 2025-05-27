@@ -1,6 +1,6 @@
 'use client';
 import React, { FormEvent } from 'react';
-import { registerUser } from '../../helper/api';
+import { registerUser } from '@utils/api';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
 

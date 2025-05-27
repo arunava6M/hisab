@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '../../atoms/Button';
 import { useAuthContext } from '../../../../context/authContext';
 import Picker from 'emoji-picker-react';
-import { addCategory } from '../../../../helper/api';
+import { addCategory } from '../../../utils/api';
 
 interface AddCategoryProps {
   authToken: string;
@@ -18,7 +18,6 @@ export const AddCategory = ({
   handleClose,
   onSuccess,
 }: AddCategoryProps) => {
-  console.log('rendering add category');
   const { user } = useAuthContext();
   const [name, setName] = useState('');
   const [budget, setBudget] = useState(0);

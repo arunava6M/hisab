@@ -2,21 +2,21 @@
 import React, { useEffect, useState } from 'react';
 import ProgressBar from './progressBar';
 import styled from 'styled-components';
-import { Block, Flex } from '../component/atoms/Basic';
-import { Text } from '../component/atoms/Text';
+import { Block, Flex } from '../../component/atoms/Basic';
+import { Text } from '../../component/atoms/Text';
 import Image from 'next/image';
 import {
   editCategory,
   getAggregatedExpenses,
   shareCategory,
-} from '../../helper/api';
-import { Input } from '../component/atoms/Input';
+} from '../../utils/api';
+import { Input } from '../../component/atoms/Input';
 import Cookies from 'js-cookie';
 import { redirect, useRouter } from 'next/navigation';
-import { AggregatedCategory, ErrorType } from '../utils/commonTypes';
-import { MemoizedUserList } from '../component/atoms/UserList';
-import { useAuthContext } from '../../context/authContext';
-import { getColorFromValue } from '../utils/helper';
+import { AggregatedCategory, ErrorType } from '../../utils/commonTypes';
+import { MemoizedUserList } from '../../component/atoms/UserList';
+import { useAuthContext } from '../../../context/authContext';
+import { getColorFromValue } from '../../utils/helper';
 
 const Page = () => {
   const { user } = useAuthContext();

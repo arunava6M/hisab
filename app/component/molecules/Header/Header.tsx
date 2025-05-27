@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Text } from '../../atoms/Text';
 import { useAuthContext } from '../../../../context/authContext';
 import { getToken } from '../../../utils/helper';
+import Cookies from 'js-cookie';
 
 const Wrapper = styled.header`
   position: fixed;
@@ -39,7 +40,9 @@ const ProfileImageWrapper = styled.div`
 
 export const Header = () => {
   const { user } = useAuthContext();
-  if (!user?.firstName) return null;
+  const authToken = Cookies.get('authToken');
+  console.log('auth in header: ', authToken);
+  if (!user?.firstName || !authToken) return null;
   return (
     <Wrapper>
       <ProfileImageWrapper>
