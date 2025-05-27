@@ -1,10 +1,11 @@
 import styled from 'styled-components';
-import { Block } from '../../atoms/Basic';
-import { Text } from '../../atoms/Text';
-import { getRandomColor } from '../../../utils/helper';
+import { Block } from '@atoms/Basic';
+import { Text } from '@atoms/Text';
+import { getRandomColor } from '@utils/helper';
 import { Fragment, useEffect } from 'react';
 import React from 'react';
-import { ExpenseProps } from '../../../utils/commonTypes';
+import { ExpenseProps } from '@utils/commonTypes';
+import { capitalizeFirstLetter } from '@utils/helper';
 
 const AmtRow = styled.div`
   display: flex;
@@ -48,7 +49,7 @@ const ExpenseComp: React.FC<ExpenseProps> = ({
   uniqueKey,
   showDateLine,
 }) => {
-  const { amount, date: isoString, category } = expense;
+  const { amount, date: isoString, category, description } = expense;
   const readableDate = new Date(isoString);
   return (
     <Fragment key={uniqueKey}>
@@ -63,8 +64,15 @@ const ExpenseComp: React.FC<ExpenseProps> = ({
         <AmtRow>
           <Tag>{category.icon}</Tag>
           <DescriptionRow>
-            <Text variant="small">{category.name}</Text>
-            <Text variant="light">{readableDate.toLocaleTimeString()}</Text>
+            <Text variant="small">{capitalizeFirstLetter(category.name)}</Text>
+            <Text variant="light">
+              {readableDate.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              })}
+            </Text>
+            <Text variant="light">{description}</Text>
           </DescriptionRow>
           <Amount>
             <Text variant="bold">{`₹ ${amount}`}</Text>

@@ -25,6 +25,7 @@ import Cookies from 'js-cookie';
 import Loading from '@atoms/loading';
 import dynamic from 'next/dynamic';
 import { genericCatch, showDateLine } from '@utils/helper';
+import { Flex } from '@atoms/Basic';
 
 const SuccessAnimation = dynamic(
   () => import('@atoms/SuccessAnimation/Success'),
@@ -208,20 +209,20 @@ const DashboardPage: React.FC<{}> = () => {
           />
           <TagWrapper>
             <EmojiContainer>
-              {categories.map((each, index) => (
-                <Fragment key={index}>
-                  {each.sharedWith.length > 0 && (
-                    <StarImage
-                      height={15}
-                      width={15}
-                      src="/icon/star.png"
-                      alt="Add icon"
-                    />
-                  )}
-                  <Emoji key={index} onClick={() => handleEmojiClick(each._id)}>
-                    {each.icon}
+              {categories.map(({ sharedBetween, _id, icon }, index) => (
+                <Flex
+                  // m="0 10px 0 0"
+                  w="auto"
+                  b={sharedBetween.length > 1 && '1px solid rgb(92, 235, 245)'}
+                  br="10px"
+                  // p="5px"
+                  key={index}
+                >
+                  {sharedBetween.length > 1 && <StarImage>🌐</StarImage>}
+                  <Emoji key={index} onClick={() => handleEmojiClick(_id)}>
+                    {icon}
                   </Emoji>
-                </Fragment>
+                </Flex>
               ))}
             </EmojiContainer>
             <AddCategoryButton onClick={() => setOpenAddTag(true)}>
@@ -253,15 +254,13 @@ const DashboardPage: React.FC<{}> = () => {
   );
 };
 
-const StarImage = styled(Image)`
-  margin: 0 -13px 0 0;
+const StarImage = styled.div`
+  position: absolute;
+  top: -4px;
+  left: -2px;
   z-index: 1;
-  align-self: end;
-  width: 15px;
-  height: 15px;
+  font-size: 15px;
   padding: 3px;
-  background-color: black;
-  border-radius: 50%;
 `;
 
 export const SignOut = styled(SignUp)`
@@ -277,6 +276,7 @@ export const PageWrapper = styled.div`
 `;
 const ExpenseMain = styled.div`
   overflow: scroll;
+  overflow-x: hidden;
   height: calc(100% - 320px);
   margin-top: 70px;
 `;
@@ -370,7 +370,7 @@ const TagWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   background: #f0f0f0;
-  height: 50px;
+  // height: 50px;
   border-radius: 8px;
   padding: 5px 10px;
   width: 100%;

@@ -1,9 +1,24 @@
 import styled from 'styled-components';
 import Image from 'next/image';
-import { Text } from '../../atoms/Text';
+import { Text } from '@atoms/Text';
 import { useAuthContext } from '../../../../context/authContext';
-import { getToken } from '../../../utils/helper';
+import { capitalizeFirstLetter, getToken } from '@utils/helper';
 import Cookies from 'js-cookie';
+
+export const Header = () => {
+  const { user } = useAuthContext();
+  const authToken = Cookies.get('authToken');
+  console.log('auth in header: ', authToken);
+  if (!user?.firstName || !authToken) return null;
+  return (
+    <Wrapper>
+      <ProfileImageWrapper>
+        <Image src="images/avatar.png" width={40} height={40} alt="nav icon" />
+      </ProfileImageWrapper>
+      <Text>{`${capitalizeFirstLetter(user?.firstName)}'s finance tracker !`}</Text>
+    </Wrapper>
+  );
+};
 
 const Wrapper = styled.header`
   position: fixed;
@@ -37,18 +52,3 @@ const ProfileImageWrapper = styled.div`
   align-items: center;
   margin-right: 20px;
 `;
-
-export const Header = () => {
-  const { user } = useAuthContext();
-  const authToken = Cookies.get('authToken');
-  console.log('auth in header: ', authToken);
-  if (!user?.firstName || !authToken) return null;
-  return (
-    <Wrapper>
-      <ProfileImageWrapper>
-        <Image src="images/avatar.png" width={40} height={40} alt="nav icon" />
-      </ProfileImageWrapper>
-      <Text>{`${user?.firstName}'s finance tracker !`}</Text>
-    </Wrapper>
-  );
-};

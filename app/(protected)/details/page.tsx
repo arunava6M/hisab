@@ -51,7 +51,7 @@ const Page = () => {
   const editCategoryReq = async (id: string) => {
     try {
       const response = await editCategory(authToken, id, {
-        sharedWith: shareEmail,
+        sharedBetween: shareEmail,
       });
       console.log(response?.data);
     } catch (error) {
@@ -72,14 +72,13 @@ const Page = () => {
 
   return (
     <PageWrapper>
-      {/* <SignOut onClick={() => router.back()}>◀️</SignOut> */}
       <DetailsContainer>
         {categories.length == 0 ? (
           <EmptyContent>You have not done any Hisab yet !</EmptyContent>
         ) : (
           categories.map(
             (
-              { icon, description, total, budget, categoryId, sharedWith },
+              { icon, description, total, budget, categoryId, sharedBetween },
               index
             ) => {
               const floatPercentageSpent = parseFloat(
@@ -89,7 +88,7 @@ const Page = () => {
 
               return (
                 <Block
-                  height={expand === index ? '210px' : '145px'}
+                  height={expand === index ? 'fit-content' : '145px'}
                   key={index}
                   onClick={() => expandBlock(index)}
                 >
@@ -103,10 +102,8 @@ const Page = () => {
                     >
                       {icon}
                     </Flex>
-                    {sharedWith.length > 0 && (
-                      <MemoizedUserList
-                        list={[{ name: user?.firstName }, ...sharedWith]}
-                      />
+                    {sharedBetween.length > 1 && (
+                      <MemoizedUserList list={sharedBetween} />
                     )}
                     <Flex f="3">
                       <Text variant="bold">{description}</Text>
@@ -133,14 +130,18 @@ const Page = () => {
                     minH="40px"
                     h="40px"
                   >
-                    <Flex br="10px" p="3px 20px" a="center" j="space-between">
-                      <Image
-                        height={25}
-                        width={25}
-                        src="/icon/money-bag.png"
-                        alt="Add icon"
-                      />
-                      <Flex m="10px" a="center">
+                    <Flex br="10px" p="3px 20px" a="center" j="start">
+                      <Flex
+                        bg="#fac457"
+                        j="center"
+                        a="center"
+                        h="30px"
+                        w="30px"
+                        br="50%"
+                      >
+                        ✔️
+                      </Flex>
+                      <Flex m="10px" a="center" w="auto">
                         <Text
                           color="green"
                           variant="smallBold"
@@ -148,10 +149,13 @@ const Page = () => {
                       </Flex>
                     </Flex>
                     <Flex j="flex-end" m="0 10px" a="center">
+                      <Flex j="center" a="center" h="30px" w="30px">
+                        💸
+                      </Flex>
                       <Text
                         variant="smallBold"
                         color="red"
-                      >{`- ₹${parseFloat(total) | 0}`}</Text>
+                      >{`₹${parseFloat(total) | 0}`}</Text>
                     </Flex>
                   </Flex>
                   <Rotate
@@ -170,33 +174,51 @@ const Page = () => {
                     />
                   </Rotate>
                   {expand === index && (
-                    <Flex
-                      a="center"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    >
-                      <Text color="green" variant="small">
-                        Share:
-                      </Text>
-                      <Input
-                        onChange={(e) => {
-                          e.preventDefault();
-                          setShareEmail(e.target.value);
+                    <Flex d="column">
+                      <Block bordercolor="#c8c2c2">
+                        <Text variant="small">{`💰 Budget: ₹${parseFloat(budget)}`}</Text>
+                        <Text variant="small">{`💸 Spent: ₹${parseFloat(total)}`}</Text>
+                        <Text variant="small">{`✅ Left: ₹${Math.max(0, parseFloat(budget) - parseFloat(total)) | 0}`}</Text>
+                      </Block>
+                      {sharedBetween.length > 1 && (
+                        <Text variant="light">
+                          This category is shared between:
+                          {sharedBetween.map((each, index) => (
+                            <span
+                              key={index}
+                            >{`${index === 0 ? ' ' : ', '}${each.name}`}</span>
+                          ))}
+                        </Text>
+                      )}
+                      <Flex
+                        a="center"
+                        onClick={(e) => {
+                          e.stopPropagation();
                         }}
-                        value={shareEmail}
-                        margin="10px"
-                        type="text"
-                        placeholder={'Email of the user'}
-                        height="auto"
-                      />
-                      <Image
-                        height={15}
-                        width={15}
-                        src="/icon/paper-plane.png"
-                        alt="Add icon"
-                        onClick={() => shareEmailHandler(categoryId)}
-                      />
+                        m="10px 0 0 0"
+                      >
+                        <Text color="green" variant="small">
+                          Share:
+                        </Text>
+                        <Input
+                          onChange={(e) => {
+                            e.preventDefault();
+                            setShareEmail(e.target.value);
+                          }}
+                          value={shareEmail}
+                          margin="10px"
+                          type="text"
+                          placeholder={'Email of the user'}
+                          height="auto"
+                        />
+                        <Image
+                          height={15}
+                          width={15}
+                          src="/icon/paper-plane.png"
+                          alt="Add icon"
+                          onClick={() => shareEmailHandler(categoryId)}
+                        />
+                      </Flex>
                     </Flex>
                   )}
                 </Block>

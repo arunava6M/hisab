@@ -21,7 +21,7 @@ interface CategoryType {
   budget: number;
   icon: string;
   owner: string;
-  sharedWith: Array<string>;
+  sharedBetween: Array<string>;
 }
 
 interface AggregatedCategory {
@@ -30,7 +30,7 @@ interface AggregatedCategory {
   categoryId: string;
   budget: string;
   icon: string;
-  sharedWith: Array<{ name: string }>;
+  sharedBetween: Array<{ name: string }>;
 }
 
 interface ErrorType {
