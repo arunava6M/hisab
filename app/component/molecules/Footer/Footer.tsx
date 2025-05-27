@@ -42,7 +42,7 @@ export const Footer = () => {
     {
       icon: '/icon/message-dollar.svg',
       title: 'Home',
-      link: '/',
+      link: '/dashboard',
     },
     {
       icon: '/icon/chart.svg',
