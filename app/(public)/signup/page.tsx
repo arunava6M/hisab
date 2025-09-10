@@ -1,114 +1,55 @@
-'use client';
-import React, { FormEvent } from 'react';
-import { registerUser } from '@utils/api';
-import { useRouter } from 'next/navigation';
-import styled from 'styled-components';
+import Link from 'next/link';
+import { signUpActions } from './actions';
+import { redirect } from 'next/navigation';
 
-export const PageWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background-color: #f9f9fa;
-  justify-content: center;
-  align-items: center;
-`;
-
-export const Form = styled.form`
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: max-content;
-`;
-
-export const Input = styled.input`
-  width: 200px;
-  height: 40px;
-  border-radius: 5px;
-  border: solid 1px black;
-  background-color: inherit;
-  margin-bottom: 10px;
-  padding: 5px;
-  color: black;
-`;
-
-export const SignUp = styled.button`
-  right: 0;
-  padding: 10px;
-  border-radius: 5px;
-  border: none;
-  outline: none;
-  background-color: cadetblue;
-`;
-
-export const Redirect = styled(SignUp)`
-  position: absolute;
-  bottom: 0;
-  margin: 0 20px 20px 0;
-`;
 function Page() {
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [firstName, setFirstName] = React.useState('');
-  const [lastName, setLastName] = React.useState('');
-
-  const router = useRouter();
-
-  const handleForm = async (event: FormEvent) => {
-    event.preventDefault();
-    const body = { email, password, firstName, lastName };
-
-    const { result, error } = await registerUser(body);
-
-    if (error) {
-      return console.log(error);
+  const handleRegistration = async (formData: any) => {
+    'use server';
+    const resp = await signUpActions(formData);
+    if (resp.success) {
+      redirect('/signin');
     }
-
-    // else successful
-    console.log(result);
-    return router.push('/signin');
   };
+
   return (
-    <PageWrapper>
-      <Form onSubmit={handleForm} className="form">
-        <Input
-          onChange={(e) => setFirstName(e.target.value)}
-          required
+    <div className="page-wrapper">
+      <form action={handleRegistration} className="form">
+        <input
+          className="form-input"
           type="text"
           name="firstName"
-          id="firstName"
           placeholder="First name"
-        />
-        <Input
-          onChange={(e) => setLastName(e.target.value)}
           required
+        />
+        <input
+          className="form-input"
           type="text"
           name="lastName"
-          id="lastName"
           placeholder="Last name"
-        />
-        <Input
-          onChange={(e) => setEmail(e.target.value)}
           required
+        />
+        <input
+          className="form-input"
           type="email"
           name="email"
-          id="email"
           placeholder="example@mail.com"
-        />
-        <Input
-          onChange={(e) => setPassword(e.target.value)}
           required
+        />
+        <input
+          className="form-input"
           type="password"
           name="password"
-          id="password"
           placeholder="password"
+          required
         />
-        <SignUp type="submit">Sign up</SignUp>
-      </Form>
-      <Redirect onClick={() => router.push('/signin')}>
+        <button className="auth-button" type="submit">
+          Sign up
+        </button>
+      </form>
+      <Link className="auth-button redirect" href="/signin">
         👉 I have an account
-      </Redirect>
-    </PageWrapper>
+      </Link>
+    </div>
   );
 }
 

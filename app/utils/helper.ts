@@ -63,13 +63,13 @@ export const toaster = (message: string) =>
 
 export const genericCatch = (
   error: ErrorType | any,
-  router: AppRouterInstance
+  router?: AppRouterInstance
 ) => {
   // alert(error.response.data.error);
   toaster(error.response.data.error);
   if (error.response.data.error === 'Token is invalid/expired') {
     Cookies.remove('authToken');
-    router.push('/signin');
+    router?.push('/signin');
   }
 };
 
@@ -77,3 +77,5 @@ export const capitalizeFirstLetter = (str: string) => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
+
+export const getAuthToken = () => Cookies.get('authToken');

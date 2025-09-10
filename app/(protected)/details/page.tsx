@@ -2,24 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import ProgressBar from './progressBar';
 import styled from 'styled-components';
-import { Block, Flex } from '../../component/atoms/Basic';
-import { Text } from '../../component/atoms/Text';
+import { Block, Flex } from '@atoms/Basic';
+import { Text } from '@atoms/Text';
 import Image from 'next/image';
-import {
-  editCategory,
-  getAggregatedExpenses,
-  shareCategory,
-} from '../../utils/api';
-import { Input } from '../../component/atoms/Input';
-import Cookies from 'js-cookie';
-import { redirect, useRouter } from 'next/navigation';
-import { AggregatedCategory, ErrorType } from '../../utils/commonTypes';
-import { MemoizedUserList } from '../../component/atoms/UserList';
-import { useAuthContext } from '../../../context/authContext';
-import { getColorFromValue } from '../../utils/helper';
+import { editCategory, getAggregatedExpenses, shareCategory } from '@utils/api';
+import { Input } from '@atoms/Input';
+import { useRouter } from 'next/navigation';
+import { AggregatedCategory } from '../../utils/commonTypes';
+import { MemoizedUserList } from '@atoms/UserList';
+import { genericCatch, getAuthToken, getColorFromValue } from '@utils/helper';
 
 const Page = () => {
-  const { user } = useAuthContext();
   const [categories, setCategories] = useState<AggregatedCategory[]>();
   const [expand, setExpand] = useState<number | null>(null);
   const router = useRouter();
@@ -28,18 +21,13 @@ const Page = () => {
 
   useEffect(() => {
     const fetchApis = async () => {
-      const auth_token = Cookies.get('authToken');
-      if (!auth_token) {
-        router.push('/signin');
-      }
+      const authToken = getAuthToken();
       try {
-        const response = await getAggregatedExpenses(auth_token);
+        const response = await getAggregatedExpenses(authToken);
         setCategories(response.data);
-        setAuthToken(auth_token);
+        setAuthToken(authToken);
       } catch (error: any) {
-        if (error.response.data.details === 'jwt expired') {
-          router.push('/signin');
-        }
+        genericCatch(error, router);
       }
     };
 

@@ -1,15 +1,13 @@
+'use client';
 import styled from 'styled-components';
 import Image from 'next/image';
 import { Text } from '@atoms/Text';
 import { useAuthContext } from '../../../../context/authContext';
 import { capitalizeFirstLetter, getToken } from '@utils/helper';
-import Cookies from 'js-cookie';
 
 export const Header = () => {
   const { user } = useAuthContext();
-  const authToken = Cookies.get('authToken');
-  console.log('auth in header: ', authToken);
-  if (!user?.firstName || !authToken) return null;
+  if (!user?.firstName) return null;
   return (
     <Wrapper>
       <ProfileImageWrapper>

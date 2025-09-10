@@ -1,26 +1,13 @@
 'use client';
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  Fragment,
-  useCallback,
-} from 'react';
-import { useAuthContext } from '../../../context/authContext';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  addExpense,
-  getCategories,
-  getExpenses,
-  getUserDetails,
-} from '@utils/api';
+import { addExpense, getCategories, getExpenses } from '@utils/api';
 import styled from 'styled-components';
 import { Input } from '@atoms/Input';
 import { Expense } from '@molecules/Expense';
 import { AddCategory } from '@molecules/AddCategory';
-import { SignUp } from '../../(public)/signup/page';
 import Image from 'next/image';
-import { CategoryType, ExpenseType, UserType } from '@utils/commonTypes';
+import { CategoryType, ExpenseType } from '@utils/commonTypes';
 import Cookies from 'js-cookie';
 import Loading from '@atoms/loading';
 import dynamic from 'next/dynamic';
@@ -33,10 +20,8 @@ const SuccessAnimation = dynamic(
 );
 
 const DashboardPage: React.FC<{}> = () => {
-  const { setUser } = useAuthContext();
   const [expenses, setExpenses] = useState<ExpenseType[]>([]);
   const [categories, setCategories] = useState<CategoryType[]>([]);
-  const [userDetails, setUserDetails] = useState<UserType>();
   const [enteredAmount, setEnteredAmount] = useState(0);
   const [enteredDescription, setEnteredDescription] = useState('');
   const [openAddTag, setOpenAddTag] = useState(false);
@@ -80,18 +65,11 @@ const DashboardPage: React.FC<{}> = () => {
   }, [expenses, scrollToLast]);
 
   useEffect(() => {
-    Promise.all([
-      getUserDetails(authToken),
-      getExpenses(authToken),
-      getCategories(authToken),
-    ])
+    Promise.all([getExpenses(authToken), getCategories(authToken)])
       .then((resp) => {
-        const user = resp[0].data;
-        setUserDetails(user);
-        setUser(user);
-        const expense = resp[1].data;
+        const expense = resp[0].data;
         setExpenses(expense.reverse());
-        const categories = resp[2].data;
+        const categories = resp[1].data;
         if (categories.length === 0) {
           setOpenAddTag(true);
         }
@@ -261,12 +239,6 @@ const StarImage = styled.div`
   z-index: 1;
   font-size: 15px;
   padding: 3px;
-`;
-
-export const SignOut = styled(SignUp)`
-  width: 40px;
-  position: absolute;
-  margin: 10px;
 `;
 
 export const PageWrapper = styled.div`
