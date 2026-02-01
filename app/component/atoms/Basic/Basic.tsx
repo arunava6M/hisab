@@ -1,3 +1,4 @@
+import { Button } from '@atoms/Button';
 import styled, { keyframes } from 'styled-components';
 
 type FlexProps = {
@@ -13,6 +14,8 @@ type FlexProps = {
   br?: string;
   bg?: string;
   minH?: string;
+  o?: string;
+  fw?: string;
 };
 export const Flex = styled.div<FlexProps>`
   display: flex;
@@ -28,7 +31,8 @@ export const Flex = styled.div<FlexProps>`
   border: ${({ b }) => b};
   border-radius: ${({ br }) => br};
   background-color: ${({ bg }) => bg};
-  overflow: hidden;
+  overflow: ${({ o }) => o || 'hidden'};
+  flex-wrap: ${({ fw }) => fw || 'nowrap'};
 `;
 
 const OpactiyAnimation = keyframes`
@@ -53,4 +57,24 @@ export const Block = styled.div<{ bordercolor?: string; height?: string }>`
     opacity 0.3s ease;
   animation-name: ${OpactiyAnimation};
   animation-duration: 0.5s;
+`;
+
+export const Dialog = styled.dialog`
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.5);
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const FullWidthButton = styled(Button)`
+  width: 100%;
+  margin: 5px 0;
+  height: 50px;
 `;
