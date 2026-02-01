@@ -79,3 +79,29 @@ export const capitalizeFirstLetter = (str: string) => {
 };
 
 export const getAuthToken = () => Cookies.get('authToken');
+
+export const getMonthOptions = (): Array<{ name: string; number: Array<> }> => {
+  const now = new Date();
+  const options = [];
+
+  // Generate past 6 months + current month
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthName = date.toLocaleString('default', { month: 'long' });
+    const monthNumber = date.getMonth() + 1;
+    const year = date.getFullYear();
+
+    options.push({
+      name: monthName,
+      date: [monthNumber, year],
+    });
+  }
+
+  // options.push(
+  //   { name: 'Last 3 months', number: [3, 'months'] },
+  //   { name: 'Last 6 months', number: [6, 'months'] },
+  //   { name: 'Last year', number: [12, 'months'] }
+  // );
+
+  return options;
+};

@@ -7,6 +7,7 @@ const ParentDiv = styled.div<{ height?: number }>`
   width: 100%;
   background-color: whitesmoke;
   border-radius: 40px;
+  margin: 20px 0;
 `;
 
 const ChildDiv = styled.div<{ progress: number; progressColor: string }>`

@@ -12,7 +12,7 @@ import Cookies from 'js-cookie';
 import Loading from '@atoms/loading';
 import dynamic from 'next/dynamic';
 import { genericCatch, showDateLine } from '@utils/helper';
-import { Flex } from '@atoms/Basic';
+import { Dialog, Flex } from '@atoms/Basic';
 
 const SuccessAnimation = dynamic(
   () => import('@atoms/SuccessAnimation/Success'),
@@ -321,20 +321,6 @@ const AddCategoryButton = styled.button`
   outline: none;
   background: none;
   display: flex;
-  align-items: center;
-`;
-
-const Dialog = styled.dialog`
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  backdrop-filter: blur(5px);
-  background-color: rgba(0, 0, 0, 0.5);
-  overflow: auto;
-  display: flex;
-  justify-content: center;
   align-items: center;
 `;
 

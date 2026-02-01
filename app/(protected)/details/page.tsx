@@ -1,16 +1,30 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import ProgressBar from './progressBar';
+import React, { Fragment, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { Block, Flex } from '@atoms/Basic';
+import { Block, Dialog, Flex } from '@atoms/Basic';
 import { Text } from '@atoms/Text';
 import Image from 'next/image';
-import { editCategory, getAggregatedExpenses, shareCategory } from '@utils/api';
+import {
+  editCategory,
+  getAggregatedExpenses,
+  getReport,
+  shareCategory,
+} from '@utils/api';
 import { Input } from '@atoms/Input';
 import { useRouter } from 'next/navigation';
 import { AggregatedCategory } from '../../utils/commonTypes';
 import { MemoizedUserList } from '@atoms/UserList';
-import { genericCatch, getAuthToken, getColorFromValue } from '@utils/helper';
+import {
+  genericCatch,
+  getAuthToken,
+  getColorFromValue,
+  getMonthOptions,
+} from '@utils/helper';
+import { Button } from '@atoms/Button';
+import BarDetails from '@molecules/BarDetails/BarDetails';
+import DateRangeFilter from '@molecules/MonthPicker/MonthPicker';
+import Loading from '@atoms/loading';
+import { QUICK_SELECT_OPTIONS } from '@molecules/MonthPicker/QuickRangeView';
 
 const Page = () => {
   const [categories, setCategories] = useState<AggregatedCategory[]>();
@@ -18,21 +32,34 @@ const Page = () => {
   const router = useRouter();
   const [shareEmail, setShareEmail] = useState('');
   const [authToken, setAuthToken] = useState<string>();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [reportDisaply, setReportDisplay] = useState<string>(
+    QUICK_SELECT_OPTIONS.thismonth
+  );
 
   useEffect(() => {
-    const fetchApis = async () => {
-      const authToken = getAuthToken();
-      try {
-        const response = await getAggregatedExpenses(authToken);
-        setCategories(response.data);
-        setAuthToken(authToken);
-      } catch (error: any) {
-        genericCatch(error, router);
-      }
-    };
-
-    fetchApis();
+    requestReport();
   }, []);
+
+  const requestReport = async (startDate?: Date, endDate?: Date) => {
+    setLoading(true);
+    const authToken = getAuthToken();
+    try {
+      const monthWiseResponse = await getReport(authToken, {
+        startDate,
+        endDate,
+      });
+      console.log(monthWiseResponse.data);
+      setCategories(monthWiseResponse.data);
+      setAuthToken(authToken);
+    } catch (error: any) {
+      genericCatch(error, router);
+    }
+    setLoading(false);
+  };
+
+  if (loading) return <Loading />;
 
   if (!categories) return null;
 
@@ -61,8 +88,26 @@ const Page = () => {
   return (
     <PageWrapper>
       <DetailsContainer>
+        <Flex o="scroll" j="center" a="center">
+          {/* {getMonthOptions().map((each, index) => (
+            <Fragment key={index}>
+              <ReportButtons
+                margin="0 5px"
+                name={each.name}
+                onClick={() => getReportUtility(...(each.number || []))}
+                variant="secondary"
+              />
+            </Fragment>
+          ))} */}
+          <Text>Viewing: </Text>
+          <ReportButtons
+            margin="0 5px"
+            name={`${reportDisaply} ⏷`}
+            onClick={() => setIsModalOpen(true)}
+          />
+        </Flex>
         {categories.length == 0 ? (
-          <EmptyContent>You have not done any Hisab yet !</EmptyContent>
+          <EmptyContent>Nada for this period !</EmptyContent>
         ) : (
           categories.map(
             (
@@ -76,41 +121,16 @@ const Page = () => {
 
               return (
                 <Block
-                  height={expand === index ? 'fit-content' : '145px'}
+                  height="fit-content"
                   key={index}
                   onClick={() => expandBlock(index)}
                 >
-                  <Flex j="flex-start" a="center" minH="35px" h="35px">
-                    <Flex
-                      m="0 10px 0 0"
-                      w="auto"
-                      b="1px solid #c2c2c2"
-                      br="10px"
-                      p="5px"
-                    >
-                      {icon}
-                    </Flex>
-                    {sharedBetween.length > 1 && (
-                      <MemoizedUserList list={sharedBetween} />
-                    )}
-                    <Flex f="3">
-                      <Text variant="bold">{description}</Text>
-                    </Flex>
-                    <Percentage>
-                      <Text variant="bold">
-                        {floatPercentageSpent || 0}
-                        <span>%</span>
-                      </Text>
-                    </Percentage>
-                  </Flex>
-                  <Flex m="10px 0" minH="10px" h="10px">
-                    <ProgressBar
-                      key={index}
-                      height={2}
-                      progress={floatPercentageSpent}
-                      progressColor={colorBar}
-                    />
-                  </Flex>
+                  <BarDetails
+                    icon={icon}
+                    description={description}
+                    spent={total}
+                    budget={budget}
+                  />
                   <Flex
                     j="space-between"
                     a="center"
@@ -215,9 +235,23 @@ const Page = () => {
           )
         )}
       </DetailsContainer>
+      <DateRangeFilter
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onApply={({ startDate, endDate, displayText }) => {
+          console.log('date applied range: ', startDate, endDate, displayText);
+          setIsModalOpen(false);
+          setReportDisplay(displayText);
+          requestReport(startDate, endDate);
+        }}
+      />
     </PageWrapper>
   );
 };
+
+const ReportButtons = styled(Button)`
+  max-width: fit-content;
+`;
 
 const EmptyContent = styled.div`
   height: 300px;
@@ -233,7 +267,7 @@ export const PageWrapper = styled.div`
 `;
 
 const DetailsContainer = styled.div`
-  margin: 80px 20px;
+  margin: 100px 20px;
 `;
 
 const RowWrapper = styled.div`

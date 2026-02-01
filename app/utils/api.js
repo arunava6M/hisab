@@ -50,6 +50,16 @@ export const getAggregatedExpenses = (authToken) =>
     },
   });
 
+export const getReport = (authToken, reqParams) =>
+  axios.get(`${basePath}/expense/report`, {
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+    },
+    params: {
+      ...reqParams,
+    },
+  });
+
 export const editCategory = (authToken, id, reqBody) =>
   axios.put(`${basePath}/category/${id}`, reqBody, {
     headers: {
