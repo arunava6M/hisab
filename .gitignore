@@ -35,3 +35,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 android
+
+
+public/sw.js
+public/workbox-*.js
