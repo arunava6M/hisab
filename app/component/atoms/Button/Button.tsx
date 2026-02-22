@@ -9,6 +9,7 @@ export interface StyledButtonProps {
   error?: boolean;
   border?: string;
   bg?: string;
+  padding?: string;
 }
 interface ButtonProps extends StyledButtonProps {
   name: string;
@@ -41,7 +42,7 @@ const buttonVariants = {
 };
 const StyledButton = styled.button<StyledButtonProps>`
   right: 0;
-  padding: 10px 20px;
+  padding: ${({ padding }) => padding || '10px 20px'};
   border-radius: 8px;
   border: ${({ error, border }) => {
     if (error) return '2px solid red';
@@ -66,6 +67,7 @@ export const Button = ({
   error,
   border,
   bg,
+  padding,
 }: ButtonProps) => (
   <StyledButton
     className={className}
@@ -76,6 +78,7 @@ export const Button = ({
     error={error}
     border={border}
     bg={bg}
+    padding={padding}
   >
     {name}
   </StyledButton>

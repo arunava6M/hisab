@@ -17,11 +17,10 @@ interface QuickRangeViewProps {
 export const QuickRangeView: React.FC<QuickRangeViewProps> = ({ onApply }) => {
   const [option, setOption] = useState<string>(QUICK_SELECT_OPTIONS.thismonth);
   return (
-    <Flex fw="wrap">
+    <Flex fw="wrap" w="200px" h="200px">
       {Object.entries(QUICK_SELECT_OPTIONS).map(([key, value]) => (
         <Button
           key={key}
-          margin="5px"
           onClick={() => {
             setOption(value);
           }}

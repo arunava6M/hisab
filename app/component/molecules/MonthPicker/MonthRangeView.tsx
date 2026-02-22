@@ -39,7 +39,7 @@ export const MonthRangeView: React.FC<MonthRangeViewProps> = ({ onApply }) => {
   }, []);
 
   return (
-    <Flex fw="wrap">
+    <Flex fw="wrap" w="200px" h="200px">
       <Flex d="column" h="max-content">
         <Text variant="small">Month</Text>
         <Select

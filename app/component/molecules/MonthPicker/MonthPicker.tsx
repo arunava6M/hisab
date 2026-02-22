@@ -139,13 +139,14 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
   return (
     <Dialog>
       <DialogContent>
-        <Flex j="space-between" a="center" m="0 0 10px 0" h="60px">
-          <h3> Select date range</h3>
+        <Flex j="space-between" a="center" m="0 0 10px 0" h="30px">
+          <h4> Select date range</h4>
           <Button variant="secondary" onClick={onClose} name="❌" />
         </Flex>
-        <Flex m="0 0 15px 0" bg="#dadfdd" br="8px" p="5px" h="60px">
+        <Flex m="0 0 15px 0" bg="#dadfdd" br="8px" p="5px" h="50px" w="auto">
           <Button
-            margin="0 5px 0 0"
+            padding="0"
+            margin="0"
             onClick={() => setRangeMode(RANGE_MODE.QUICK)}
             name="Quick"
             variant={
@@ -153,21 +154,21 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
             }
           />
           <Button
-            margin="0 5px"
+            margin="0"
             onClick={() => setRangeMode(RANGE_MODE.MONTH)}
             name="Month"
             variant={
               rangeMode === RANGE_MODE.MONTH ? 'primary' : 'primary_toggle'
             }
           />
-          <Button
-            margin="0 0 0 5px"
+          {/* <Button
+            margin="0"
             onClick={() => setRangeMode(RANGE_MODE.CUSTOM)}
             name="Custom"
             variant={
               rangeMode === RANGE_MODE.CUSTOM ? 'primary' : 'primary_toggle'
             }
-          />
+          /> */}
         </Flex>
         <Flex h="200px">{rangeView()}</Flex>
       </DialogContent>
