@@ -47,19 +47,7 @@ export const showDateLine = (current: string, previous: string) => {
   return currDate.toDateString() !== prevDate.toDateString();
 };
 
-export const toaster = (message: string) =>
-  toast.error(message, {
-    // position: "top-center",
-    // autoClose: 3000,
-    // hideProgressBar: false,
-    // closeOnClick: true,
-    // pauseOnHover: true,
-    // draggable: true,
-    // progress: undefined,
-    // theme: "colored",
-    // transition: Bounce,
-    // width: "50px",
-  });
+export const toaster = (message: string) => toast.error(message);
 
 export const genericCatch = (
   error: ErrorType | any,
